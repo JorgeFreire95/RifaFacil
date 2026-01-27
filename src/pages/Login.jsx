@@ -7,6 +7,7 @@ const Login = () => {
     const [isLogin, setIsLogin] = useState(true);
     const [formData, setFormData] = useState({ name: '', email: '', password: '' });
     const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
 
     // Verification State
     const [verificationStep, setVerificationStep] = useState(false);
@@ -23,9 +24,10 @@ const Login = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
+        setSuccess('');
 
         if (isLogin) {
-            const res = login(formData.email, formData.password);
+            const res = await login(formData.email, formData.password);
             if (res.success) navigate('/');
             else setError(res.message);
         } else {
@@ -38,8 +40,11 @@ const Login = () => {
                 }
 
                 // Complete Registration
-                const res = register(formData.name, formData.email, formData.password);
-                if (res.success) navigate('/');
+                const res = await register(formData.name, formData.email, formData.password);
+                if (res.success) {
+                    setSuccess('¡Usuario creado con éxito! Redirigiendo...');
+                    setTimeout(() => navigate('/'), 1500);
+                }
                 else setError(res.message);
 
             } else {
@@ -54,7 +59,8 @@ const Login = () => {
                     return;
                 }
 
-                if (!checkEmailAvailable(formData.email)) {
+                const isAvailable = await checkEmailAvailable(formData.email);
+                if (!isAvailable) {
                     setError('El correo ya está registrado');
                     return;
                 }
@@ -157,6 +163,12 @@ const Login = () => {
                     {error && (
                         <div className="error-banner">
                             {error}
+                        </div>
+                    )}
+
+                    {success && (
+                        <div className="error-banner" style={{ background: 'rgba(34, 197, 94, 0.2)', color: '#4ade80', borderColor: '#4ade80' }}>
+                            {success}
                         </div>
                     )}
 
