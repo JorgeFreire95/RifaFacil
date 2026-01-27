@@ -83,18 +83,18 @@ const CreateRaffle = () => {
 
     return (
         <div className="container">
-            <header style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '32px' }}>
-                <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer' }}>
+            <header className="header-with-back">
+                <button onClick={() => navigate(-1)} className="btn-back">
                     <ArrowLeft size={24} />
                 </button>
                 <h2>{id ? 'Editar Rifa' : 'Nueva Rifa'}</h2>
             </header>
 
-            <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '24px' }}>
+            <form onSubmit={handleSubmit} className="auth-form">
 
                 {/* Basic Info */}
-                <section className="glass-panel" style={{ padding: '20px' }}>
-                    <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-muted)' }}>Título de la Rifa</label>
+                <section className="glass-panel form-section">
+                    <label className="form-label">Título de la Rifa</label>
                     <input
                         className="input-field"
                         name="title"
@@ -105,22 +105,15 @@ const CreateRaffle = () => {
                 </section>
 
                 {/* Numbers Configuration */}
-                <section className="glass-panel" style={{ padding: '20px' }}>
-                    <label style={{ display: 'block', marginBottom: '16px', color: 'var(--text-muted)' }}>Cantidad de Números</label>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+                <section className="glass-panel form-section">
+                    <label className="form-label">Cantidad de Números</label>
+                    <div className="options-grid">
                         {['25', '50', '100', 'custom'].map((opt) => (
                             <button
                                 key={opt}
                                 type="button"
                                 onClick={() => setFormData(prev => ({ ...prev, ticketCount: opt }))}
-                                style={{
-                                    background: formData.ticketCount === opt ? 'var(--primary)' : 'rgba(255,255,255,0.05)',
-                                    border: `1px solid ${formData.ticketCount === opt ? 'var(--primary)' : 'var(--glass-border)'}`,
-                                    color: 'white',
-                                    padding: '12px',
-                                    borderRadius: '12px',
-                                    cursor: 'pointer'
-                                }}
+                                className={`option-btn ${formData.ticketCount === opt ? 'active' : ''}`}
                             >
                                 {opt === 'custom' ? 'Personalizar' : opt}
                             </button>
@@ -140,16 +133,16 @@ const CreateRaffle = () => {
                 </section>
 
                 {/* Prizes */}
-                <section className="glass-panel" style={{ padding: '20px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
+                <section className="glass-panel form-section">
+                    <div className="section-header">
                         <label style={{ color: 'var(--text-muted)' }}>Premios</label>
-                        <button type="button" onClick={addPrize} style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <button type="button" onClick={addPrize} className="btn-text-icon">
                             <Plus size={16} /> Agregar
                         </button>
                     </div>
                     <div style={{ display: 'grid', gap: '12px' }}>
                         {prizes.map((prize, idx) => (
-                            <div key={idx} style={{ display: 'flex', gap: '8px' }}>
+                            <div key={idx} className="prize-row">
                                 <input
                                     className="input-field"
                                     placeholder={`Premio #${idx + 1}`}
@@ -157,7 +150,7 @@ const CreateRaffle = () => {
                                     onChange={(e) => handlePrizeChange(idx, e.target.value)}
                                 />
                                 {prizes.length > 1 && (
-                                    <button type="button" onClick={() => removePrize(idx)} style={{ background: 'rgba(239, 68, 68, 0.2)', color: 'var(--danger)', border: 'none', borderRadius: '10px', width: '44px', cursor: 'pointer' }}>
+                                    <button type="button" onClick={() => removePrize(idx)} className="btn-remove">
                                         <X size={20} />
                                     </button>
                                 )}
@@ -167,22 +160,13 @@ const CreateRaffle = () => {
                 </section>
 
                 {/* Template */}
-                <section className="glass-panel" style={{ padding: '20px' }}>
-                    <label style={{ display: 'block', marginBottom: '16px', color: 'var(--text-muted)' }}>Diseño del Cartón</label>
-                    <div style={{ display: 'flex', gap: '16px' }}>
+                <section className="glass-panel form-section">
+                    <label className="form-label">Diseño del Cartón</label>
+                    <div className="template-grid">
                         <button
                             type="button"
                             onClick={() => setFormData(prev => ({ ...prev, template: 'random' }))}
-                            style={{
-                                flex: 1,
-                                padding: '20px',
-                                borderRadius: '12px',
-                                background: formData.template === 'random' ? 'rgba(139, 92, 246, 0.2)' : 'rgba(255,255,255,0.05)',
-                                border: `1px solid ${formData.template === 'random' ? 'var(--primary)' : 'var(--glass-border)'}`,
-                                cursor: 'pointer',
-                                textAlign: 'center',
-                                color: 'white'
-                            }}
+                            className={`template-card ${formData.template === 'random' ? 'active' : ''}`}
                         >
                             <LayoutTemplate size={32} style={{ marginBottom: '8px' }} />
                             <div style={{ fontSize: '0.9rem' }}>Aleatorio</div>
@@ -190,16 +174,7 @@ const CreateRaffle = () => {
                         <button
                             type="button"
                             onClick={() => setFormData(prev => ({ ...prev, template: 'image' }))}
-                            style={{
-                                flex: 1,
-                                padding: '20px',
-                                borderRadius: '12px',
-                                background: formData.template === 'image' ? 'rgba(139, 92, 246, 0.2)' : 'rgba(255,255,255,0.05)',
-                                border: `1px solid ${formData.template === 'image' ? 'var(--primary)' : 'var(--glass-border)'}`,
-                                cursor: 'pointer',
-                                textAlign: 'center',
-                                color: 'white'
-                            }}
+                            className={`template-card ${formData.template === 'image' ? 'active' : ''}`}
                         >
                             <ImageIcon size={32} style={{ marginBottom: '8px' }} />
                             <div style={{ fontSize: '0.9rem' }}>Imagen</div>
@@ -215,8 +190,8 @@ const CreateRaffle = () => {
                                 style={{ width: '100%', color: 'var(--text-muted)' }}
                             />
                             {formData.image && (
-                                <div style={{ marginTop: '12px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--glass-border)' }}>
-                                    <img src={formData.image} alt="Preview" style={{ width: '100%', display: 'block' }} />
+                                <div className="image-preview">
+                                    <img src={formData.image} alt="Preview" />
                                 </div>
                             )}
                         </div>

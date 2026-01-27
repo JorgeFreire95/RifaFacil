@@ -83,64 +83,46 @@ const RaffleDetails = () => {
     };
 
     return (
-        <div className="container" style={{ paddingBottom: '80px' }}>
-            <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
-                <button onClick={() => navigate('/')} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer' }}>
+        <div className="container details-container">
+            <header className="details-header">
+                <button onClick={() => navigate('/')} className="btn-back">
                     <ArrowLeft size={24} />
                 </button>
-                <div style={{ display: 'flex', gap: '12px' }}>
-                    <button onClick={() => navigate(`/edit/${raffle.id}`)} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', padding: '8px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                <div className="header-actions">
+                    <button onClick={() => navigate(`/edit/${raffle.id}`)} className="btn-secondary">
                         <Edit size={20} />
                     </button>
-                    <button onClick={startDraw} style={{ background: 'var(--primary)', border: 'none', color: 'white', padding: '8px 12px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <button onClick={startDraw} className="btn-draw">
                         <Dices size={20} /> <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>Sorteo</span>
                     </button>
-                    <button style={{ background: 'none', border: 'none', color: 'white' }}>
+                    <button className="btn-back">
                         <Share size={24} />
                     </button>
                 </div>
             </header>
 
             {/* Unified Raffle Board */}
-            <div style={{
-                position: 'relative',
-                borderRadius: '24px',
-                overflow: 'hidden',
-                padding: '20px',
-                border: '1px solid var(--glass-border)',
-                boxShadow: '0 4px 30px rgba(0, 0, 0, 0.3)'
-            }}>
+            <div className="raffle-board">
 
                 {/* Background Layer */}
-                <div style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    zIndex: 0,
+                <div className="board-background" style={{
                     backgroundImage: raffle.template === 'image' && raffle.image
                         ? `url(${raffle.image})`
-                        : 'linear-gradient(135deg, #4f46e5 0%, #7e22ce 100%)', // Default 'random' gradient
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                    opacity: raffle.template === 'image' ? 0.6 : 0.8, // Adjust opacity for readability
+                        : 'linear-gradient(135deg, #4f46e5 0%, #7e22ce 100%)',
+                    opacity: raffle.template === 'image' ? 0.6 : 0.8,
                 }} />
 
                 {/* Overlay for contrast if needed */}
-                <div style={{
-                    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 0,
-                    background: 'rgba(15, 23, 42, 0.4)'
-                }} />
+                <div className="board-overlay" />
 
-                <div style={{ position: 'relative', zIndex: 1 }}>
+                <div className="board-content">
                     {/* Info Section */}
-                    <div style={{ marginBottom: '24px', textAlign: 'center', color: 'white', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
-                        <h2 style={{ fontSize: '2rem', marginBottom: '12px', fontWeight: 800 }}>{raffle.title}</h2>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
+                    <div className="board-header">
+                        <h2 className="board-title">{raffle.title}</h2>
+                        <div className="prizes-list">
                             <h4 style={{ opacity: 0.9 }}>Premios:</h4>
                             {raffle.prizes.map((p, i) => (
-                                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(0,0,0,0.3)', padding: '4px 12px', borderRadius: '20px' }}>
+                                <div key={i} className="prize-tag">
                                     <div style={{ width: '6px', height: '6px', background: '#fbbf24', borderRadius: '50%' }} />
                                     {p}
                                 </div>
@@ -149,38 +131,23 @@ const RaffleDetails = () => {
                     </div>
 
                     {/* Grid */}
-                    <div style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fill, minmax(60px, 1fr))',
-                        gap: '12px'
-                    }}>
+                    <div className="ticket-grid">
                         {raffle.tickets.map((ticket) => (
                             <button
                                 key={ticket.number}
                                 onClick={() => handleTicketClick(ticket)}
+                                className="ticket-btn"
                                 style={{
                                     background: ticket.status === 'sold'
-                                        ? 'rgba(239, 68, 68, 0.8)' // Solid red for sold
-                                        : 'rgba(255, 255, 255, 0.15)', // Glassy white for available
+                                        ? 'rgba(239, 68, 68, 0.8)'
+                                        : 'rgba(255, 255, 255, 0.15)',
                                     backdropFilter: 'blur(4px)',
                                     border: `1px solid ${ticket.status === 'sold' ? 'rgba(239, 68, 68, 0.5)' : 'rgba(255, 255, 255, 0.3)'}`,
-                                    borderRadius: '12px',
-                                    aspectRatio: '1',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    color: 'white',
-                                    cursor: 'pointer',
-                                    position: 'relative',
-                                    overflow: 'hidden',
-                                    boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-                                    textShadow: '0 1px 2px rgba(0,0,0,0.5)'
                                 }}
                             >
-                                <span style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>{ticket.number}</span>
+                                <span className="ticket-number">{ticket.number}</span>
                                 {ticket.status === 'sold' && (
-                                    <div style={{ fontSize: '0.6rem', color: 'white', marginTop: '2px', fontWeight: '600' }}>Vendido</div>
+                                    <div className="ticket-status">Vendido</div>
                                 )}
                             </button>
                         ))}
@@ -190,28 +157,19 @@ const RaffleDetails = () => {
 
             {/* Ticket Info Modal Overlay */}
             {modalOpen && (
-                <div style={{
-                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                    background: 'rgba(0,0,0,0.8)',
-                    backdropFilter: 'blur(4px)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: '20px',
-                    zIndex: 50
-                }}>
-                    <div className="glass-panel" style={{ width: '100%', maxWidth: '400px', padding: '24px', background: '#1e1b4b' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                <div className="modal-overlay">
+                    <div className="glass-panel modal-content">
+                        <div className="modal-header">
                             <h3>Número {selectedTicket?.number}</h3>
-                            <button onClick={() => setModalOpen(false)} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer' }}>
+                            <button onClick={() => setModalOpen(false)} className="btn-back">
                                 <X size={24} />
                             </button>
                         </div>
 
-                        <form onSubmit={handleSaveTicket} style={{ display: 'grid', gap: '16px' }}>
-                            <div>
-                                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', color: 'var(--text-muted)' }}>
-                                    <User size={16} /> Nombre y Apellido
+                        <form onSubmit={handleSaveTicket} className="auth-form">
+                            <div className="input-wrapper">
+                                <label className="form-label">
+                                    <User size={16} style={{ display: 'inline', marginRight: '8px' }} /> Nombre y Apellido
                                 </label>
                                 <input
                                     className="input-field"
@@ -221,9 +179,9 @@ const RaffleDetails = () => {
                                 />
                             </div>
 
-                            <div>
-                                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', color: 'var(--text-muted)' }}>
-                                    <Phone size={16} /> Teléfono
+                            <div className="input-wrapper">
+                                <label className="form-label">
+                                    <Phone size={16} style={{ display: 'inline', marginRight: '8px' }} /> Teléfono
                                 </label>
                                 <input
                                     className="input-field"
@@ -239,14 +197,7 @@ const RaffleDetails = () => {
                             </button>
 
                             {selectedTicket?.status === 'sold' && (
-                                <button type="button" onClick={handleReleaseTicket} style={{
-                                    background: 'transparent',
-                                    border: '1px solid var(--danger)',
-                                    color: 'var(--danger)',
-                                    padding: '12px',
-                                    borderRadius: '12px',
-                                    cursor: 'pointer'
-                                }}>
+                                <button type="button" onClick={handleReleaseTicket} className="btn-release">
                                     Liberar Número
                                 </button>
                             )}
@@ -257,38 +208,19 @@ const RaffleDetails = () => {
 
             {/* Draw Modal Overlay */}
             {showDrawModal && (
-                <div style={{
-                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                    background: 'rgba(0,0,0,0.9)',
-                    backdropFilter: 'blur(8px)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: '20px',
-                    zIndex: 60
-                }}>
-                    <div style={{ textAlign: 'center', color: 'white', width: '100%' }}>
+                <div className="modal-overlay" style={{ zIndex: 60, background: 'rgba(0,0,0,0.9)' }}>
+                    <div className="draw-container">
                         {!winner ? (
                             <>
                                 <h3 style={{ fontSize: '1.5rem', marginBottom: '24px', opacity: 0.8 }}>Sorteando...</h3>
-                                <div style={{
-                                    fontSize: '6rem',
-                                    fontWeight: '800',
-                                    textShadow: '0 0 40px var(--primary)',
-                                    animation: 'bounce 0.5s infinite alternate'
-                                }}>
+                                <div className="draw-number-lg">
                                     {currentDrawNumber}
                                 </div>
                             </>
                         ) : (
-                            <div className="glass-panel" style={{ padding: '40px', background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.05))', border: '1px solid #4ade80' }}>
+                            <div className="glass-panel winner-panel">
                                 <div style={{ marginBottom: '16px' }}>🎉 ¡Tenemos Ganador! 🎉</div>
-                                <div style={{
-                                    fontSize: '5rem',
-                                    fontWeight: '800',
-                                    color: '#4ade80',
-                                    marginBottom: '16px'
-                                }}>
+                                <div className="winner-number">
                                     {winner.number}
                                 </div>
 

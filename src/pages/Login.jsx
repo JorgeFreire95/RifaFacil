@@ -1,16 +1,26 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { User, Lock, Mail, ArrowRight } from 'lucide-react';
+import { User, Lock, Mail, ArrowRight, CheckCircle, Smartphone } from 'lucide-react';
 
 const Login = () => {
     const [isLogin, setIsLogin] = useState(true);
     const [formData, setFormData] = useState({ name: '', email: '', password: '' });
     const [error, setError] = useState('');
-    const { login, register } = useAuth();
+
+    // Verification State
+    const [verificationStep, setVerificationStep] = useState(false);
+    const [serverOtp, setServerOtp] = useState(null);
+    const [userOtp, setUserOtp] = useState('');
+
+    const { login, register, checkEmailAvailable } = useAuth();
     const navigate = useNavigate();
 
-    const handleSubmit = (e) => {
+    const validateEmail = (email) => {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    };
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
 
@@ -19,93 +29,156 @@ const Login = () => {
             if (res.success) navigate('/');
             else setError(res.message);
         } else {
-            if (!formData.name || !formData.email || !formData.password) {
-                setError('Todos los campos son obligatorios');
-                return;
+            // REGISTER FLOW
+            if (verificationStep) {
+                // Step 2: Verify OTP
+                if (userOtp !== serverOtp) {
+                    setError('Código de verificación incorrecto');
+                    return;
+                }
+
+                // Complete Registration
+                const res = register(formData.name, formData.email, formData.password);
+                if (res.success) navigate('/');
+                else setError(res.message);
+
+            } else {
+                // Step 1: Initiate & Verify Availability
+                if (!formData.name || !formData.email || !formData.password) {
+                    setError('Todos los campos son obligatorios');
+                    return;
+                }
+
+                if (!validateEmail(formData.email)) {
+                    setError('Ingresa un correo electrónico válido');
+                    return;
+                }
+
+                if (!checkEmailAvailable(formData.email)) {
+                    setError('El correo ya está registrado');
+                    return;
+                }
+
+                // Generate OTP (4 digits)
+                const code = Math.floor(1000 + Math.random() * 9000).toString();
+                setServerOtp(code);
+                setVerificationStep(true);
+
+                // Simulate Email Sending
+                // In a real app, this would call an API
+                setTimeout(() => {
+                    alert(`[SIMULACIÓN DE CORREO]\n\nTu código de verificación es: ${code}\n\nIngrésalo para validar tu cuenta.`);
+                }, 500);
             }
-            const res = register(formData.name, formData.email, formData.password);
-            if (res.success) navigate('/');
-            else setError(res.message);
         }
     };
 
+    const resetForm = () => {
+        setIsLogin(!isLogin);
+        setError('');
+        setVerificationStep(false);
+        setFormData({ name: '', email: '', password: '' });
+        setUserOtp('');
+    };
+
     return (
-        <div style={{
-            minHeight: '100vh',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '20px',
-            background: 'var(--bg-gradient)'
-        }}>
-            <div className="glass-panel" style={{ width: '100%', maxWidth: '400px', padding: '32px' }}>
-                <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-                    <h1 style={{ fontSize: '2rem', marginBottom: '8px' }}>Rifas App</h1>
-                    <p style={{ color: 'var(--text-muted)' }}>
-                        {isLogin ? 'Inicia sesión para continuar' : 'Crea tu cuenta gratis'}
+        <div className="auth-container">
+            <div className="glass-panel auth-card">
+                <div className="auth-header">
+                    <h1 className="home-greeting">Rifas App</h1>
+                    <p className="home-subtitle">
+                        {isLogin
+                            ? 'Inicia sesión para continuar'
+                            : (verificationStep ? 'Verifica tu correo' : 'Crea tu cuenta gratis')}
                     </p>
                 </div>
 
-                <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '16px' }}>
-                    {!isLogin && (
-                        <div style={{ position: 'relative' }}>
-                            <User size={20} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--text-muted)' }} />
-                            <input
-                                className="input-field"
-                                style={{ paddingLeft: '40px' }}
-                                placeholder="Nombre completo"
-                                value={formData.name}
-                                onChange={e => setFormData({ ...formData, name: e.target.value })}
-                            />
-                        </div>
+                <form onSubmit={handleSubmit} className="auth-form">
+
+                    {verificationStep ? (
+                        <>
+                            <div style={{ textAlign: 'center', marginBottom: '16px', color: '#4ade80' }}>
+                                <Smartphone size={48} style={{ opacity: 0.8 }} />
+                                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '8px' }}>
+                                    Hemos enviado un código a <strong>{formData.email}</strong>
+                                </p>
+                            </div>
+
+                            <div className="input-wrapper">
+                                <CheckCircle size={20} className="input-icon" />
+                                <input
+                                    className="input-field input-with-icon"
+                                    placeholder="Código de 4 dígitos"
+                                    value={userOtp}
+                                    onChange={e => setUserOtp(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                                    maxLength={4}
+                                    style={{ letterSpacing: '4px', fontSize: '1.2rem', textAlign: 'center' }}
+                                />
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            {!isLogin && (
+                                <div className="input-wrapper">
+                                    <User size={20} className="input-icon" />
+                                    <input
+                                        className="input-field input-with-icon"
+                                        placeholder="Nombre completo"
+                                        value={formData.name}
+                                        onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                    />
+                                </div>
+                            )}
+
+                            <div className="input-wrapper">
+                                <Mail size={20} className="input-icon" />
+                                <input
+                                    className="input-field input-with-icon"
+                                    type="email"
+                                    placeholder="Correo electrónico"
+                                    value={formData.email}
+                                    onChange={e => setFormData({ ...formData, email: e.target.value })}
+                                />
+                            </div>
+
+                            <div className="input-wrapper">
+                                <Lock size={20} className="input-icon" />
+                                <input
+                                    className="input-field input-with-icon"
+                                    type="password"
+                                    placeholder="Contraseña"
+                                    value={formData.password}
+                                    onChange={e => setFormData({ ...formData, password: e.target.value })}
+                                />
+                            </div>
+                        </>
                     )}
 
-                    <div style={{ position: 'relative' }}>
-                        <Mail size={20} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--text-muted)' }} />
-                        <input
-                            className="input-field"
-                            style={{ paddingLeft: '40px' }}
-                            type="email"
-                            placeholder="Correo electrónico"
-                            value={formData.email}
-                            onChange={e => setFormData({ ...formData, email: e.target.value })}
-                        />
-                    </div>
-
-                    <div style={{ position: 'relative' }}>
-                        <Lock size={20} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--text-muted)' }} />
-                        <input
-                            className="input-field"
-                            style={{ paddingLeft: '40px' }}
-                            type="password"
-                            placeholder="Contraseña"
-                            value={formData.password}
-                            onChange={e => setFormData({ ...formData, password: e.target.value })}
-                        />
-                    </div>
-
                     {error && (
-                        <div style={{
-                            background: 'rgba(239, 68, 68, 0.1)',
-                            color: 'var(--danger)',
-                            padding: '12px',
-                            borderRadius: '8px',
-                            fontSize: '0.9rem',
-                            textAlign: 'center'
-                        }}>
+                        <div className="error-banner">
                             {error}
                         </div>
                     )}
 
                     <button type="submit" className="btn-primary" style={{ marginTop: '8px', justifyContent: 'center' }}>
-                        {isLogin ? 'Ingresar' : 'Registrarse'} <ArrowRight size={20} />
+                        {verificationStep ? 'Validar Código' : (isLogin ? 'Ingresar' : 'Continuar')} <ArrowRight size={20} />
                     </button>
+
+                    {verificationStep && (
+                        <button
+                            type="button"
+                            onClick={() => setVerificationStep(false)}
+                            style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '0.9rem', cursor: 'pointer', marginTop: '-8px' }}
+                        >
+                            ¿Email incorrecto? Volver
+                        </button>
+                    )}
                 </form>
 
-                <div style={{ marginTop: '24px', textAlign: 'center' }}>
+                <div className="auth-footer">
                     <button
-                        onClick={() => { setIsLogin(!isLogin); setError(''); }}
-                        style={{ background: 'none', border: 'none', color: 'var(--text-muted)', textDecoration: 'underline', cursor: 'pointer' }}
+                        onClick={resetForm}
+                        className="auth-switch-btn"
                     >
                         {isLogin ? '¿No tienes cuenta? Regístrate' : '¿Ya tienes cuenta? Inicia Sesión'}
                     </button>

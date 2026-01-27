@@ -58,8 +58,13 @@ export const AuthProvider = ({ children }) => {
         sessionStorage.removeItem('active_session');
     };
 
+    const checkEmailAvailable = (email) => {
+        const users = getUsers();
+        return !users.find(u => u.email === email);
+    };
+
     return (
-        <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+        <AuthContext.Provider value={{ user, login, register, logout, loading, checkEmailAvailable }}>
             {!loading && children}
         </AuthContext.Provider>
     );
