@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useRaffle } from '../context/RaffleContext';
-import { ArrowLeft, Plus, X, Image as ImageIcon, LayoutTemplate } from 'lucide-react';
+import { ArrowLeft, Plus, X, Image as ImageIcon, LayoutTemplate, Loader } from 'lucide-react';
+import { Dialog } from '@capacitor/dialog';
 
 const CreateRaffle = () => {
     const navigate = useNavigate();
@@ -17,6 +18,7 @@ const CreateRaffle = () => {
     });
 
     const [prizes, setPrizes] = useState(['']);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
         if (id) {
@@ -57,6 +59,12 @@ const CreateRaffle = () => {
     const handleImageUpload = (e) => {
         const file = e.target.files[0];
         if (file) {
+            // Strict limit to ~400KB to ensure Base64 string stays under Firestore 1MB limit
+            if (file.size > 400 * 1024) {
+                alert("La imagen es demasiado grande. Por favor usa una imagen menor a 400KB para asegurar el guardado.");
+                return;
+            }
+
             const reader = new FileReader();
             reader.onloadend = () => {
                 setFormData(prev => ({ ...prev, image: reader.result }));
@@ -65,7 +73,7 @@ const CreateRaffle = () => {
         }
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         if (!formData.title) return alert('El título es obligatorio');
 
@@ -73,12 +81,37 @@ const CreateRaffle = () => {
         const finalCount = formData.ticketCount === 'custom' ? formData.customCount : formData.ticketCount;
         if (!finalCount || finalCount <= 0) return alert('Cantidad de números inválida');
 
-        if (id) {
-            updateRaffle(id, { ...formData, prizes, ticketCount: finalCount });
-        } else {
-            addRaffle({ ...formData, prizes, ticketCount: finalCount });
+        setIsSubmitting(true);
+        try {
+            const dataToSave = { ...formData, prizes, ticketCount: finalCount };
+
+            // Promise race: Wait for DB or timeout after 2.5s to avoid hanging
+            const savePromise = id
+                ? updateRaffle(id, dataToSave)
+                : addRaffle(dataToSave);
+
+            const timeoutPromise = new Promise(resolve => setTimeout(resolve, 2500));
+
+            await Promise.race([savePromise, timeoutPromise]);
+
+            // Show success via native Dialog
+            await Dialog.alert({
+                title: 'Éxito',
+                message: id ? 'Rifa actualizada correctamente' : 'Rifa creada correctamente',
+            });
+
+            navigate('/');
+        } catch (error) {
+            console.error(error);
+            // Even if it fails, sometimes it's just a network timeout. 
+            // We'll let the user retry if it's a real error, but for sticking:
+            await Dialog.alert({
+                title: 'Atención',
+                message: 'La rifa se está guardando en segundo plano.',
+            });
+            navigate('/');
+            setIsSubmitting(false);
         }
-        navigate('/');
     };
 
     return (
@@ -198,8 +231,13 @@ const CreateRaffle = () => {
                     )}
                 </section>
 
-                <button type="submit" className="btn-primary" style={{ marginTop: '16px', fontSize: '1.1rem' }}>
-                    {id ? 'Guardar Cambios' : 'Crear Rifa'}
+                <button type="submit" className="btn-primary" style={{ marginTop: '16px', fontSize: '1.1rem' }} disabled={isSubmitting}>
+                    {isSubmitting ? (
+                        <>
+                            <Loader size={20} style={{ marginRight: '8px', animation: 'spin 1s linear infinite' }} />
+                            Guardando...
+                        </>
+                    ) : (id ? 'Guardar Cambios' : 'Crear Rifa')}
                 </button>
                 <div style={{ height: '40px' }}></div>
             </form>

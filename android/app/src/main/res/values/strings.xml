@@ -4,4 +4,5 @@
     <string name="title_activity_main">RifaFacil</string>
     <string name="package_name">com.jorge.rifas</string>
     <string name="custom_url_scheme">com.jorge.rifas</string>
+    <string name="server_client_id">621778931438-chajkbhre35lcu2j4iddj2cnn9h8qh35.apps.googleusercontent.com</string>
 </resources>

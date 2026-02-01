@@ -5,9 +5,13 @@ import {
     signOut,
     onAuthStateChanged,
     setPersistence,
-    browserSessionPersistence
+    GoogleAuthProvider,
+    signInWithPopup,
+    signInWithCredential
 } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
+import { Capacitor } from '@capacitor/core';
+import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 import { auth, db } from '../firebaseConfig';
 
 const AuthContext = createContext();
@@ -19,30 +23,26 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     // Listen to Firebase Auth state
-    // Listen to Firebase Auth state
     useEffect(() => {
-        setPersistence(auth, browserSessionPersistence)
-            .then(() => {
-                const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-                    if (currentUser) {
-                        try {
-                            const userDoc = await getDoc(doc(db, "users", currentUser.uid));
-                            if (userDoc.exists()) {
-                                setUser({ uid: currentUser.uid, email: currentUser.email, ...userDoc.data() });
-                            } else {
-                                setUser({ uid: currentUser.uid, email: currentUser.email });
-                            }
-                        } catch (e) {
-                            console.error("Firestore error in auth listener:", e);
-                            setUser({ uid: currentUser.uid, email: currentUser.email });
-                        }
+        const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+            if (currentUser) {
+                try {
+                    const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+                    if (userDoc.exists()) {
+                        setUser({ uid: currentUser.uid, email: currentUser.email, ...userDoc.data() });
                     } else {
-                        setUser(null);
+                        setUser({ uid: currentUser.uid, email: currentUser.email });
                     }
-                    setLoading(false);
-                });
-                return () => unsubscribe();
-            });
+                } catch (e) {
+                    console.error("Firestore error in auth listener:", e);
+                    setUser({ uid: currentUser.uid, email: currentUser.email });
+                }
+            } else {
+                setUser(null);
+            }
+            setLoading(false);
+        });
+        return () => unsubscribe();
     }, []);
 
     const login = async (email, password) => {
@@ -67,21 +67,27 @@ export const AuthProvider = ({ children }) => {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
 
-            // EXPLICITLY SET USER STATE TO AVOID RACE CONDITION
-            setUser({ uid: user.uid, email: user.email, name: name });
+            const newUserProfile = {
+                uid: user.uid,
+                name: name,
+                email: email,
+                role: 'user',
+                createdAt: new Date().toISOString(),
+                lastLogin: new Date().toISOString(),
+                provider: 'password',
+                photoURL: user.photoURL || '',
+                phoneNumber: user.phoneNumber || ''
+            };
 
-            // 2. Save User Data in Firestore (Best effort)
-            try {
-                await setDoc(doc(db, "users", user.uid), {
-                    name: name,
-                    email: email,
-                    createdAt: new Date().toISOString(),
-                    role: 'user'
+            // 2. EXPLICITLY SET USER STATE IMMEDIATELY (Optimistic Update)
+            // This ensures the UI unblocks even if Firestore is slow/offline
+            setUser(newUserProfile);
+
+            // 3. Save User Data in Firestore (Background / Non-blocking)
+            setDoc(doc(db, "users", user.uid), newUserProfile)
+                .catch(fsError => {
+                    console.error("Error saving Firestore profile (will sync later):", fsError);
                 });
-            } catch (fsError) {
-                console.error("Error creating Firestore profile:", fsError);
-                // Continue even if Firestore fails - the user account IS created.
-            }
 
             return { success: true };
         } catch (error) {
@@ -90,7 +96,7 @@ export const AuthProvider = ({ children }) => {
             if (error.code === 'auth/email-already-in-use') msg = 'El correo ya está registrado';
             else if (error.code === 'auth/weak-password') msg = 'La contraseña es muy débil';
             else if (error.code === 'auth/operation-not-allowed') msg = 'El registro por correo no está habilitado en Firebase';
-            else msg = `Error: ${error.message} (${error.code})`;
+            else msg = error.message;
             return { success: false, message: msg };
         }
     };
@@ -110,8 +116,59 @@ export const AuthProvider = ({ children }) => {
         return true;
     };
 
+    const loginWithGoogle = async () => {
+        try {
+            let user;
+
+            if (Capacitor.isNativePlatform()) {
+                // Native Login (Android/iOS)
+                const result = await FirebaseAuthentication.signInWithGoogle();
+                const credential = GoogleAuthProvider.credential(result.credential.idToken);
+                const authResult = await signInWithCredential(auth, credential);
+                user = authResult.user;
+            } else {
+                // Web Login
+                const provider = new GoogleAuthProvider();
+                const result = await signInWithPopup(auth, provider);
+                user = result.user;
+            }
+
+            // Check if user exists in Firestore
+            const userRef = doc(db, "users", user.uid);
+            const userDoc = await getDoc(userRef);
+
+            if (!userDoc.exists()) {
+                const newUser = {
+                    uid: user.uid,
+                    name: user.displayName || 'Usuario de Google',
+                    email: user.email,
+                    role: 'user',
+                    createdAt: new Date().toISOString(),
+                    lastLogin: new Date().toISOString(),
+                    provider: 'google',
+                    photoURL: user.photoURL || '',
+                    phoneNumber: user.phoneNumber || ''
+                };
+
+                // Create user doc if first time login
+                await setDoc(userRef, newUser);
+
+                // Explicitly set user to avoid race condition
+                setUser(newUser);
+            } else {
+                // Explicitly set user to avoid race condition
+                setUser({ uid: user.uid, email: user.email, ...userDoc.data() });
+            }
+
+            return { success: true };
+        } catch (error) {
+            console.error("Google login error", error);
+            return { success: false, message: error.message };
+        }
+    };
+
     return (
-        <AuthContext.Provider value={{ user, login, register, logout, loading, checkEmailAvailable }}>
+        <AuthContext.Provider value={{ user, login, register, logout, loading, checkEmailAvailable, loginWithGoogle }}>
             {!loading && children}
         </AuthContext.Provider>
     );
