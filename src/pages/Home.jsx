@@ -44,49 +44,7 @@ const Home = () => {
                 </button>
             </header>
 
-            {/* Diagnostic Button */}
-            <button
-                onClick={async () => {
-                    // 1. Check Internet
-                    if (!navigator.onLine) {
-                        alert("⚠️ Tu dispositivo NO tiene conexión a Internet explícita. Por eso no se guardan los datos.");
-                        // Proceed anyway to try
-                    }
 
-                    try {
-                        const { doc, setDoc, enableNetwork } = await import('firebase/firestore');
-                        const { db } = await import('../firebaseConfig');
-
-                        // Force network enable just in case
-                        await enableNetwork(db).catch(e => console.log("Network already enabled"));
-
-                        await setDoc(doc(db, "_diagnostics", "test_connection"), {
-                            timestamp: new Date().toISOString(),
-                            user: user?.uid || 'anonymous',
-                            device: 'android',
-                            status: 'online'
-                        });
-                        alert("✅ ¡Conexión Exitosa! Los datos se están guardando en la nube.");
-                    } catch (e) {
-                        alert(`❌ Error de Firebase: ${e.code} - ${e.message}\n\nRevisa tu internet o las reglas de Firebase.`);
-                    }
-                }}
-                style={{
-                    fontSize: '0.75rem',
-                    padding: '8px 12px',
-                    background: '#2563eb',
-                    color: '#fff',
-                    borderRadius: '6px',
-                    marginBottom: '15px',
-                    border: 'none',
-                    alignSelf: 'center',
-                    marginTop: '10px',
-                    fontWeight: 'bold',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                }}
-            >
-                🛠 DIAGNOSTICAR CONEXIÓN (CLICK AQUÍ)
-            </button>
 
             <div className="raffles-container">
                 {loading ? (

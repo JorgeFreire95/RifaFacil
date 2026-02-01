@@ -7,7 +7,8 @@ import {
     setPersistence,
     GoogleAuthProvider,
     signInWithPopup,
-    signInWithCredential
+    signInWithCredential,
+    browserSessionPersistence // Import this
 } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 import { Capacitor } from '@capacitor/core';
@@ -21,6 +22,18 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+
+    // Configure Persistence to SESSION (clears on app close)
+    useEffect(() => {
+        const configurePersistence = async () => {
+            try {
+                await setPersistence(auth, browserSessionPersistence);
+            } catch (err) {
+                console.error("Error setting persistence:", err);
+            }
+        };
+        configurePersistence();
+    }, []);
 
     // Listen to Firebase Auth state
     useEffect(() => {

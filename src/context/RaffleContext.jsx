@@ -7,6 +7,7 @@ import {
   deleteDoc,
   doc,
   updateDoc,
+  setDoc,
   query,
   where,
   onSnapshot,
@@ -35,7 +36,7 @@ export const RaffleProvider = ({ children }) => {
         where("userId", "==", user.uid)
       );
 
-      const unsubscribe = onSnapshot(q, (snapshot) => {
+      const unsubscribe = onSnapshot(q, { includeMetadataChanges: true }, (snapshot) => {
         const userRaffles = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
@@ -44,7 +45,7 @@ export const RaffleProvider = ({ children }) => {
         userRaffles.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
         setRaffles(userRaffles);
-        setIsSynced(!snapshot.metadata.fromCache);
+        setIsSynced(!snapshot.metadata.hasPendingWrites);
         setLoading(false);
       }, (err) => {
         console.error("Error fetching raffles:", err);
@@ -87,13 +88,19 @@ export const RaffleProvider = ({ children }) => {
       // OPTIMISTIC UPDATE: Update local state immediately
       setRaffles(prev => [newRaffle, ...prev]);
 
-      // Save to Firestore (exclude ID from body if you strictly want clean docs, 
-      // but usually Firestore docs don't contain their own ID field unless explicitly added. 
-      // We'll strip it for the db save or just save it, it doesn't hurt).
+      // Save to Firestore
       const { id, ...raffleData } = newRaffle;
 
-      // Use setDoc with the pre-generated ref
-      await setDoc(newRaffleRef, raffleData);
+      try {
+        // Use setDoc with the pre-generated ref
+        setDoc(newRaffleRef, raffleData).catch(e => {
+          console.error("Background write failed (will retry):", e);
+        });
+      } catch (syncError) {
+        console.error("Synchronous DB error:", syncError);
+        // Alert user to see if it's an import issue or db issue
+        alert("Error interno DB: " + syncError.message);
+      }
 
       return newRaffleRef.id;
     } catch (e) {
@@ -123,9 +130,9 @@ export const RaffleProvider = ({ children }) => {
 
     try {
       const raffleRef = doc(db, "raffles", raffleId);
-      await updateDoc(raffleRef, {
+      updateDoc(raffleRef, {
         tickets: updatedTickets
-      });
+      }).catch(e => console.error("Ticket update bg error:", e));
     } catch (e) {
       console.error("Error updating ticket: ", e);
     }
@@ -134,7 +141,7 @@ export const RaffleProvider = ({ children }) => {
   const deleteRaffle = async (id) => {
     if (!user) return;
     try {
-      await deleteDoc(doc(db, "raffles", id));
+      deleteDoc(doc(db, "raffles", id)).catch(e => console.error("Delete bg error"));
     } catch (e) {
       console.error("Error deleting raffle: ", e);
     }
@@ -166,14 +173,14 @@ export const RaffleProvider = ({ children }) => {
 
     try {
       const raffleRef = doc(db, "raffles", id);
-      await updateDoc(raffleRef, {
+      updateDoc(raffleRef, {
         title,
         prizes: prizes.filter(p => p.trim() !== ''),
         ticketCount: finalCount,
         template,
         image: image || currentRaffle.image,
         tickets: currentTickets
-      });
+      }).catch(e => console.log("Update bg error", e));
     } catch (e) {
       console.error("Error updating raffle: ", e);
     }

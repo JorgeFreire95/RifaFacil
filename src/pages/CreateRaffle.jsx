@@ -85,14 +85,12 @@ const CreateRaffle = () => {
         try {
             const dataToSave = { ...formData, prizes, ticketCount: finalCount };
 
-            // Promise race: Wait for DB or timeout after 2.5s to avoid hanging
-            const savePromise = id
-                ? updateRaffle(id, dataToSave)
-                : addRaffle(dataToSave);
-
-            const timeoutPromise = new Promise(resolve => setTimeout(resolve, 2500));
-
-            await Promise.race([savePromise, timeoutPromise]);
+            // Add/Update returns immediately now due to optimistic updates in context
+            if (id) {
+                await updateRaffle(id, dataToSave);
+            } else {
+                await addRaffle(dataToSave);
+            }
 
             // Show success via native Dialog
             await Dialog.alert({
@@ -103,13 +101,10 @@ const CreateRaffle = () => {
             navigate('/');
         } catch (error) {
             console.error(error);
-            // Even if it fails, sometimes it's just a network timeout. 
-            // We'll let the user retry if it's a real error, but for sticking:
             await Dialog.alert({
-                title: 'Atención',
-                message: 'La rifa se está guardando en segundo plano.',
+                title: 'Error',
+                message: 'Hubo un problema al procesar la solicitud.',
             });
-            navigate('/');
             setIsSubmitting(false);
         }
     };
