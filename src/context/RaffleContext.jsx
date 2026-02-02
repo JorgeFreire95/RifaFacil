@@ -62,7 +62,7 @@ export const RaffleProvider = ({ children }) => {
   const addRaffle = async (data) => {
     if (!user) return;
 
-    const { title, prizes, ticketCount, customCount, template, image } = data;
+    const { title, prizes, ticketCount, customCount, template, image, ticketColor } = data;
     const finalCount = customCount ? parseInt(customCount) : parseInt(ticketCount);
 
     try {
@@ -76,6 +76,7 @@ export const RaffleProvider = ({ children }) => {
         prizes: prizes.filter(p => p.trim() !== ''),
         ticketCount: finalCount,
         template,
+        ticketColor: ticketColor || '#4f46e5',
         image: image || null,
         createdAt: new Date().toISOString(),
         tickets: Array.from({ length: finalCount }, (_, i) => ({
@@ -152,7 +153,7 @@ export const RaffleProvider = ({ children }) => {
     const currentRaffle = raffles.find(r => r.id === id);
     if (!currentRaffle) return;
 
-    const { title, prizes, ticketCount, customCount, template, image } = data;
+    const { title, prizes, ticketCount, customCount, template, image, ticketColor } = data;
     const finalCount = customCount ? parseInt(customCount) : parseInt(ticketCount);
 
     // Logic to adjust tickets array size preserving existing data
@@ -178,6 +179,7 @@ export const RaffleProvider = ({ children }) => {
         prizes: prizes.filter(p => p.trim() !== ''),
         ticketCount: finalCount,
         template,
+        ticketColor: ticketColor || currentRaffle.ticketColor || '#4f46e5',
         image: image || currentRaffle.image,
         tickets: currentTickets
       }).catch(e => console.log("Update bg error", e));

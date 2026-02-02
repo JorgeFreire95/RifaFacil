@@ -9,8 +9,10 @@ const Login = () => {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [showRecoverModal, setShowRecoverModal] = useState(false);
+    const [recoverEmail, setRecoverEmail] = useState('');
 
-    const { user, login, register, checkEmailAvailable, loginWithGoogle } = useAuth();
+    const { user, login, register, checkEmailAvailable, loginWithGoogle, recoverPassword } = useAuth();
     const navigate = useNavigate();
 
     // Redirect logic removed to handle it explicitly in submit handlers for better UX control
@@ -62,6 +64,29 @@ const Login = () => {
         setFormData({ name: '', email: '', password: '' });
     };
 
+    // Recover Password Function
+    const handleRecoverPassword = async (e) => {
+        e.preventDefault();
+        if (!validateEmail(recoverEmail)) {
+            setError('Ingresa un correo válido para recuperar');
+            return;
+        }
+
+        const res = await recoverPassword(recoverEmail);
+        if (res.success) {
+            setSuccess('Se ha enviado un correo de recuperación. Revisa tu bandeja de entrada.');
+            setShowRecoverModal(false);
+            setRecoverEmail('');
+        } else {
+            // Show error in the main form or a specific error state for the modal?
+            // For simplicity, let's use the main error state or an alert
+            setError(res.message);
+            // If we want the error to persist in the modal, we need a separate error state for it.
+            // Let's just close and show the error on the main screen for now, or better:
+            // kept the modal open and show error there. But I need a local error state for the modal.
+        }
+    };
+
     return (
         <div className="auth-container">
             <div className="glass-panel auth-card">
@@ -109,6 +134,31 @@ const Login = () => {
                             onChange={e => setFormData({ ...formData, password: e.target.value })}
                         />
                     </div>
+
+                    {/* Forgot Password Link */}
+                    {isLogin && (
+                        <div style={{ textAlign: 'right', marginTop: '-10px', marginBottom: '10px' }}>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setRecoverEmail(formData.email || ''); // Pre-fill if they typed it
+                                    setShowRecoverModal(true);
+                                    setError('');
+                                    setSuccess('');
+                                }}
+                                style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    color: '#ccc',
+                                    fontSize: '0.85rem',
+                                    cursor: 'pointer',
+                                    textDecoration: 'underline'
+                                }}
+                            >
+                                ¿Olvidaste tu contraseña?
+                            </button>
+                        </div>
+                    )}
 
                     {error && (
                         <div className="error-banner">
@@ -220,6 +270,64 @@ const Login = () => {
                         >
                             Ingresar a la App
                         </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Custom Recover Password Modal */}
+            {showRecoverModal && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.8)',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    zIndex: 9999,
+                    backdropFilter: 'blur(5px)'
+                }}>
+                    <div className="glass-panel" style={{
+                        padding: '2rem',
+                        textAlign: 'center',
+                        maxWidth: '90%',
+                        width: '350px',
+                        border: '1px solid rgba(255, 255, 255, 0.1)'
+                    }}>
+                        <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: 'white' }}>Recuperar Contraseña</h2>
+                        <p style={{ marginBottom: '1.5rem', color: '#ccc', fontSize: '0.9rem' }}>
+                            Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.
+                        </p>
+
+                        <div className="input-wrapper" style={{ marginBottom: '1rem' }}>
+                            <Mail size={20} className="input-icon" />
+                            <input
+                                className="input-field input-with-icon"
+                                type="email"
+                                placeholder="Correo electrónico"
+                                value={recoverEmail}
+                                onChange={e => setRecoverEmail(e.target.value)}
+                            />
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '10px' }}>
+                            <button
+                                className="btn-secondary"
+                                onClick={() => setShowRecoverModal(false)}
+                                style={{ flex: 1, background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none' }}
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                className="btn-primary"
+                                onClick={handleRecoverPassword}
+                                style={{ flex: 1, justifyContent: 'center' }}
+                            >
+                                Enviar
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

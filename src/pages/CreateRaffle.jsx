@@ -14,7 +14,8 @@ const CreateRaffle = () => {
         ticketCount: '50',
         customCount: '',
         template: 'random',
-        image: null
+        image: null,
+        ticketColor: '#4f46e5' // Default color
     });
 
     const [prizes, setPrizes] = useState(['']);
@@ -30,7 +31,8 @@ const CreateRaffle = () => {
                     ticketCount: isCustom ? 'custom' : String(raffle.ticketCount),
                     customCount: isCustom ? String(raffle.ticketCount) : '',
                     template: raffle.template,
-                    image: raffle.image
+                    image: raffle.image,
+                    ticketColor: raffle.ticketColor || '#4f46e5'
                 });
                 setPrizes(raffle.prizes.length > 0 ? raffle.prizes : ['']);
             }
@@ -193,11 +195,23 @@ const CreateRaffle = () => {
                     <div className="template-grid">
                         <button
                             type="button"
-                            onClick={() => setFormData(prev => ({ ...prev, template: 'random' }))}
+                            onClick={() => {
+                                // Generate Random Color
+                                const randomColor = '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
+                                setFormData(prev => ({ ...prev, template: 'random', ticketColor: randomColor }));
+                            }}
                             className={`template-card ${formData.template === 'random' ? 'active' : ''}`}
+                            style={{
+                                backgroundColor: formData.template === 'random' ? formData.ticketColor : 'rgba(255, 255, 255, 0.05)',
+                                borderColor: formData.template === 'random' ? formData.ticketColor : 'transparent',
+                                color: formData.template === 'random' ? '#ffffff' : 'inherit',
+                                boxShadow: formData.template === 'random' ? `0 4px 15px ${formData.ticketColor}60` : 'none',
+                                transform: formData.template === 'random' ? 'scale(1.02)' : 'scale(1)',
+                                transition: 'all 0.3s ease'
+                            }}
                         >
-                            <LayoutTemplate size={32} style={{ marginBottom: '8px' }} />
-                            <div style={{ fontSize: '0.9rem' }}>Aleatorio</div>
+                            <LayoutTemplate size={32} style={{ marginBottom: '8px', color: formData.template === 'random' ? '#ffffff' : 'inherit' }} />
+                            <div style={{ fontSize: '0.9rem', fontWeight: formData.template === 'random' ? '600' : '400' }}>Aleatorio</div>
                         </button>
                         <button
                             type="button"

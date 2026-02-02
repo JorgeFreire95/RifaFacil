@@ -8,7 +8,8 @@ import {
     GoogleAuthProvider,
     signInWithPopup,
     signInWithCredential,
-    browserSessionPersistence // Import this
+    browserSessionPersistence,
+    sendPasswordResetEmail // Import this
 } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 import { Capacitor } from '@capacitor/core';
@@ -180,8 +181,21 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    const recoverPassword = async (email) => {
+        try {
+            await sendPasswordResetEmail(auth, email);
+            return { success: true };
+        } catch (error) {
+            console.error("Error sending password reset email", error);
+            let msg = 'Error al enviar el correo de recuperación';
+            if (error.code === 'auth/user-not-found') msg = 'No existe una cuenta con este correo';
+            if (error.code === 'auth/invalid-email') msg = 'El correo electrónico no es válido';
+            return { success: false, message: msg };
+        }
+    };
+
     return (
-        <AuthContext.Provider value={{ user, login, register, logout, loading, checkEmailAvailable, loginWithGoogle }}>
+        <AuthContext.Provider value={{ user, login, register, logout, loading, checkEmailAvailable, loginWithGoogle, recoverPassword }}>
             {!loading && children}
         </AuthContext.Provider>
     );
