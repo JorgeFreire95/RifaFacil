@@ -29,11 +29,11 @@ const Home = () => {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <p className="home-subtitle">Gestiona tus sorteos</p>
                         {isSynced ? (
-                            <span style={{ color: '#4ade80', display: 'flex', alignItems: 'center', fontSize: '0.8rem', fontWeight: 'bold' }} title="Tus datos están seguros en la base de datos">
+                            <span style={{ color: 'var(--success)', display: 'flex', alignItems: 'center', fontSize: '0.8rem', fontWeight: 'bold' }} title="Tus datos están seguros en la base de datos">
                                 <Cloud size={14} style={{ marginRight: '4px' }} /> Datos en la nube
                             </span>
                         ) : (
-                            <span style={{ color: '#ef4444', display: 'flex', alignItems: 'center', fontSize: '0.8rem', fontWeight: 'bold' }} title="Los datos aún no han llegado al servidor. Verifica tu conexión.">
+                            <span style={{ color: 'var(--danger)', display: 'flex', alignItems: 'center', fontSize: '0.8rem', fontWeight: 'bold' }} title="Los datos aún no han llegado al servidor. Verifica tu conexión.">
                                 <CloudOff size={14} style={{ marginRight: '4px' }} /> ⚠ Pendiente de subir (No desinstalar)
                             </span>
                         )}
@@ -52,8 +52,8 @@ const Home = () => {
                         <Loader size={48} style={{ opacity: 0.5, marginBottom: '16px', animation: 'spin 1s linear infinite' }} />
                     </div>
                 ) : error ? (
-                    <div className="glass-panel empty-state" style={{ borderColor: '#ef4444' }}>
-                        <h3 style={{ color: '#ef4444' }}>Error de conexión</h3>
+                    <div className="glass-panel empty-state" style={{ borderColor: 'var(--danger)' }}>
+                        <h3 style={{ color: 'var(--danger)' }}>Error de conexión</h3>
                         <p>{error}</p>
                     </div>
                 ) : raffles.length === 0 ? (

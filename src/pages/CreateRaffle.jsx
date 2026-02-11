@@ -15,7 +15,7 @@ const CreateRaffle = () => {
         customCount: '',
         template: 'random',
         image: null,
-        ticketColor: '#4f46e5' // Default color
+        ticketColor: '#0066ff' // Default color - matches primary
     });
 
     const [prizes, setPrizes] = useState(['']);
@@ -32,7 +32,7 @@ const CreateRaffle = () => {
                     customCount: isCustom ? String(raffle.ticketCount) : '',
                     template: raffle.template,
                     image: raffle.image,
-                    ticketColor: raffle.ticketColor || '#4f46e5'
+                    ticketColor: raffle.ticketColor || '#0066ff'
                 });
                 setPrizes(raffle.prizes.length > 0 ? raffle.prizes : ['']);
             }

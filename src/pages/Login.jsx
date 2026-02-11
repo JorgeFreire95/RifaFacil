@@ -149,7 +149,7 @@ const Login = () => {
                                 style={{
                                     background: 'none',
                                     border: 'none',
-                                    color: '#ccc',
+                                    color: 'var(--text-muted)',
                                     fontSize: '0.85rem',
                                     cursor: 'pointer',
                                     textDecoration: 'underline'
@@ -167,7 +167,7 @@ const Login = () => {
                     )}
 
                     {success && (
-                        <div className="error-banner" style={{ background: 'rgba(34, 197, 94, 0.2)', color: '#4ade80', borderColor: '#4ade80' }}>
+                        <div className="error-banner" style={{ background: 'var(--success-light)', color: 'var(--success)', borderColor: 'var(--success)' }}>
                             {success}
                         </div>
                     )}
@@ -177,7 +177,7 @@ const Login = () => {
                     </button>
 
                     <div className="auth-divider" style={{ margin: '20px 0', textAlign: 'center', position: 'relative' }}>
-                        <span style={{ background: 'rgba(255, 255, 255, 0.1)', padding: '0 10px', color: '#ccc', fontSize: '0.9rem' }}>O continúa con</span>
+                        <span style={{ background: 'rgba(255, 255, 255, 0.1)', padding: '0 10px', color: 'var(--text-muted)', fontSize: '0.9rem' }}>O continúa con</span>
                     </div>
 
                     <button
@@ -252,8 +252,8 @@ const Login = () => {
                             width: '60px',
                             height: '60px',
                             borderRadius: '50%',
-                            background: 'rgba(74, 222, 128, 0.2)',
-                            color: '#4ade80',
+                            background: 'var(--success-light)',
+                            color: 'var(--success)',
                             display: 'flex',
                             justifyContent: 'center',
                             alignItems: 'center',
@@ -297,7 +297,7 @@ const Login = () => {
                         border: '1px solid rgba(255, 255, 255, 0.1)'
                     }}>
                         <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: 'white' }}>Recuperar Contraseña</h2>
-                        <p style={{ marginBottom: '1.5rem', color: '#ccc', fontSize: '0.9rem' }}>
+                        <p style={{ marginBottom: '1.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
                             Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.
                         </p>
 
