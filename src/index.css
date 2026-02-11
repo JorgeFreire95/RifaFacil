@@ -1,17 +1,18 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
 
 :root {
-  --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
-  --primary: #8b5cf6;
-  --primary-glow: rgba(139, 92, 246, 0.5);
-  --secondary: #ec4899;
-  --glass-bg: rgba(255, 255, 255, 0.05);
-  --glass-border: rgba(255, 255, 255, 0.1);
+  --bg-gradient: linear-gradient(135deg, #071233 0%, #2b0b5a 100%);
+  --primary: #06b6d4;
+  --primary-glow: rgba(6, 182, 212, 0.38);
+  --secondary: #ff6b6b;
+  --secondary-glow: rgba(255, 107, 107, 0.32);
+  --glass-bg: rgba(255, 255, 255, 0.06);
+  --glass-border: rgba(255, 255, 255, 0.12);
   --text-main: #f8fafc;
-  --text-muted: #94a3b8;
+  --text-muted: #cbd5e1;
   --card-radius: 16px;
-  --danger: #ef4444;
-  --success: #22c55e;
+  --danger: #ff4d6d;
+  --success: #34d399;
 
   /* Fluid Typography & Spacing for Automatic Adaptation */
   --font-xs: clamp(0.75rem, 1.5vw, 0.875rem);
@@ -233,7 +234,7 @@ h3 {
   width: 56px;
   height: 56px;
   padding: 0;
-  box-shadow: 0 8px 30px rgba(139, 92, 246, 0.4);
+  box-shadow: 0 8px 30px var(--primary-glow);
 }
 
 /* Auth Pages */

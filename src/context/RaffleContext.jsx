@@ -76,7 +76,7 @@ export const RaffleProvider = ({ children }) => {
         prizes: prizes.filter(p => p.trim() !== ''),
         ticketCount: finalCount,
         template,
-        ticketColor: ticketColor || '#4f46e5',
+        ticketColor: ticketColor || '#06b6d4',
         image: image || null,
         createdAt: new Date().toISOString(),
         tickets: Array.from({ length: finalCount }, (_, i) => ({
@@ -179,7 +179,7 @@ export const RaffleProvider = ({ children }) => {
         prizes: prizes.filter(p => p.trim() !== ''),
         ticketCount: finalCount,
         template,
-        ticketColor: ticketColor || currentRaffle.ticketColor || '#4f46e5',
+        ticketColor: ticketColor || currentRaffle.ticketColor || '#06b6d4',
         image: image || currentRaffle.image,
         tickets: currentTickets
       }).catch(e => console.log("Update bg error", e));
