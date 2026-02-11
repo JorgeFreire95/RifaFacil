@@ -14,11 +14,11 @@
       },
       "oauth_client": [
         {
-          "client_id": "621778931438-k3m1qlh5pt32kcl1hgqsi8tk84h13hol.apps.googleusercontent.com",
+          "client_id": "621778931438-f9ksvl9hgv2i15iqafccs6nb966j5gls.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "Rifa.Facil",
-            "certificate_hash": "3e9875339bf605651b16a70b4a2a93f0e0e47e4a"
+            "certificate_hash": "f08462a2e36f2e00d74194398fd10b07dd78bcc4"
           }
         },
         {

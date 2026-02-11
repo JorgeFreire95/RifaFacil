@@ -147,32 +147,40 @@ export const AuthProvider = ({ children }) => {
                 user = result.user;
             }
 
-            // Check if user exists in Firestore
-            const userRef = doc(db, "users", user.uid);
-            const userDoc = await getDoc(userRef);
+            // Optimistic Update: Set user immediately to unblock UI
+            const optimisticUser = {
+                uid: user.uid,
+                name: user.displayName || 'Usuario de Google',
+                email: user.email,
+                photoURL: user.photoURL || '',
+                phoneNumber: user.phoneNumber || '',
+                role: 'user', // Default role until DB sync
+                provider: 'google',
+                createdAt: new Date().toISOString(),
+                lastLogin: new Date().toISOString()
+            };
+            setUser(optimisticUser);
 
-            if (!userDoc.exists()) {
-                const newUser = {
-                    uid: user.uid,
-                    name: user.displayName || 'Usuario de Google',
-                    email: user.email,
-                    role: 'user',
-                    createdAt: new Date().toISOString(),
-                    lastLogin: new Date().toISOString(),
-                    provider: 'google',
-                    photoURL: user.photoURL || '',
-                    phoneNumber: user.phoneNumber || ''
-                };
+            // Background / Non-blocking DB Sync
+            (async () => {
+                try {
+                    const userRef = doc(db, "users", user.uid);
+                    const userDoc = await getDoc(userRef);
 
-                // Create user doc if first time login
-                await setDoc(userRef, newUser);
-
-                // Explicitly set user to avoid race condition
-                setUser(newUser);
-            } else {
-                // Explicitly set user to avoid race condition
-                setUser({ uid: user.uid, email: user.email, ...userDoc.data() });
-            }
+                    if (!userDoc.exists()) {
+                        await setDoc(userRef, optimisticUser);
+                        // No need to setUser again as it matches optimisticUser
+                    } else {
+                        // Merge DB data (e.g. roles, different name) with auth data
+                        // Only update if data is effectively different or adds info
+                        const dbData = userDoc.data();
+                        setUser(prev => ({ ...prev, ...dbData }));
+                    }
+                } catch (err) {
+                    console.error("Background profile sync failed:", err);
+                    // Optionally handle error, but UI is already unblocked
+                }
+            })();
 
             return { success: true };
         } catch (error) {

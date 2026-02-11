@@ -1,0 +1,89 @@
+
+> Configure project :app
+WARNING: Using flatDir should be avoided because it doesn't support any meta-data formats.
+
+> Configure project :capacitor-cordova-android-plugins
+WARNING: Using flatDir should be avoided because it doesn't support any meta-data formats.
+
+> Task :app:signingReport
+Variant: debug
+Config: debug
+Store: C:\Users\jorge\.android\debug.keystore
+Alias: AndroidDebugKey
+MD5: E8:88:69:F0:29:1C:C5:D0:C6:57:0D:00:37:F9:E9:75
+SHA1: F0:84:62:A2:E3:6F:2E:00:D7:41:94:39:8F:D1:0B:07:DD:78:BC:C4
+SHA-256: 09:B4:F4:AD:6A:28:5D:CB:F3:65:EE:66:69:CD:AC:11:0E:A9:2F:C5:CF:9E:54:0C:11:46:D7:BC:95:24:9D:6B
+Valid until: viernes, 4 de febrero de 2056
+----------
+Variant: release
+Config: null
+Store: null
+Alias: null
+----------
+Variant: debugAndroidTest
+Config: debug
+Store: C:\Users\jorge\.android\debug.keystore
+Alias: AndroidDebugKey
+MD5: E8:88:69:F0:29:1C:C5:D0:C6:57:0D:00:37:F9:E9:75
+SHA1: F0:84:62:A2:E3:6F:2E:00:D7:41:94:39:8F:D1:0B:07:DD:78:BC:C4
+SHA-256: 09:B4:F4:AD:6A:28:5D:CB:F3:65:EE:66:69:CD:AC:11:0E:A9:2F:C5:CF:9E:54:0C:11:46:D7:BC:95:24:9D:6B
+Valid until: viernes, 4 de febrero de 2056
+----------
+
+> Task :capacitor-android:signingReport
+Variant: debugAndroidTest
+Config: debug
+Store: C:\Users\jorge\.android\debug.keystore
+Alias: AndroidDebugKey
+MD5: E8:88:69:F0:29:1C:C5:D0:C6:57:0D:00:37:F9:E9:75
+SHA1: F0:84:62:A2:E3:6F:2E:00:D7:41:94:39:8F:D1:0B:07:DD:78:BC:C4
+SHA-256: 09:B4:F4:AD:6A:28:5D:CB:F3:65:EE:66:69:CD:AC:11:0E:A9:2F:C5:CF:9E:54:0C:11:46:D7:BC:95:24:9D:6B
+Valid until: viernes, 4 de febrero de 2056
+----------
+
+> Task :capacitor-app:signingReport
+Variant: debugAndroidTest
+Config: debug
+Store: C:\Users\jorge\.android\debug.keystore
+Alias: AndroidDebugKey
+MD5: E8:88:69:F0:29:1C:C5:D0:C6:57:0D:00:37:F9:E9:75
+SHA1: F0:84:62:A2:E3:6F:2E:00:D7:41:94:39:8F:D1:0B:07:DD:78:BC:C4
+SHA-256: 09:B4:F4:AD:6A:28:5D:CB:F3:65:EE:66:69:CD:AC:11:0E:A9:2F:C5:CF:9E:54:0C:11:46:D7:BC:95:24:9D:6B
+Valid until: viernes, 4 de febrero de 2056
+----------
+
+> Task :capacitor-cordova-android-plugins:signingReport
+Variant: debugAndroidTest
+Config: debug
+Store: C:\Users\jorge\.android\debug.keystore
+Alias: AndroidDebugKey
+MD5: E8:88:69:F0:29:1C:C5:D0:C6:57:0D:00:37:F9:E9:75
+SHA1: F0:84:62:A2:E3:6F:2E:00:D7:41:94:39:8F:D1:0B:07:DD:78:BC:C4
+SHA-256: 09:B4:F4:AD:6A:28:5D:CB:F3:65:EE:66:69:CD:AC:11:0E:A9:2F:C5:CF:9E:54:0C:11:46:D7:BC:95:24:9D:6B
+Valid until: viernes, 4 de febrero de 2056
+----------
+
+> Task :capacitor-dialog:signingReport
+Variant: debugAndroidTest
+Config: debug
+Store: C:\Users\jorge\.android\debug.keystore
+Alias: AndroidDebugKey
+MD5: E8:88:69:F0:29:1C:C5:D0:C6:57:0D:00:37:F9:E9:75
+SHA1: F0:84:62:A2:E3:6F:2E:00:D7:41:94:39:8F:D1:0B:07:DD:78:BC:C4
+SHA-256: 09:B4:F4:AD:6A:28:5D:CB:F3:65:EE:66:69:CD:AC:11:0E:A9:2F:C5:CF:9E:54:0C:11:46:D7:BC:95:24:9D:6B
+Valid until: viernes, 4 de febrero de 2056
+----------
+
+> Task :capacitor-firebase-authentication:signingReport
+Variant: debugAndroidTest
+Config: debug
+Store: C:\Users\jorge\.android\debug.keystore
+Alias: AndroidDebugKey
+MD5: E8:88:69:F0:29:1C:C5:D0:C6:57:0D:00:37:F9:E9:75
+SHA1: F0:84:62:A2:E3:6F:2E:00:D7:41:94:39:8F:D1:0B:07:DD:78:BC:C4
+SHA-256: 09:B4:F4:AD:6A:28:5D:CB:F3:65:EE:66:69:CD:AC:11:0E:A9:2F:C5:CF:9E:54:0C:11:46:D7:BC:95:24:9D:6B
+Valid until: viernes, 4 de febrero de 2056
+----------
+
+BUILD SUCCESSFUL in 2s
+6 actionable tasks: 6 executed
