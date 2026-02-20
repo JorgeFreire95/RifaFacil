@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useRaffle } from '../context/RaffleContext';
-import { Plus, Ticket, Trophy, Trash2, LogOut, Edit, Loader, Cloud, CloudOff } from 'lucide-react';
+import { Plus, Ticket, Trophy, Trash2, LogOut, Edit, Loader, Cloud, CloudOff, Calendar } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const Home = () => {
@@ -98,6 +98,12 @@ const Home = () => {
                                         <Trophy size={16} />
                                         <span>{raffle.prizes.length} Premios</span>
                                     </div>
+                                    {raffle.drawDate && (
+                                        <div className="info-item" style={{ color: 'var(--success)', fontWeight: 600 }}>
+                                            <Calendar size={16} />
+                                            <span>Sorteo: {new Date(raffle.drawDate + 'T12:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}</span>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </Link>

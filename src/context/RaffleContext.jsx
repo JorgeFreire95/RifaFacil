@@ -62,7 +62,7 @@ export const RaffleProvider = ({ children }) => {
   const addRaffle = async (data) => {
     if (!user) return;
 
-    const { title, prizes, ticketCount, customCount, template, image, ticketColor } = data;
+    const { title, prizes, ticketCount, customCount, template, image, ticketColor, drawDate } = data;
     const finalCount = customCount ? parseInt(customCount) : parseInt(ticketCount);
 
     try {
@@ -73,6 +73,7 @@ export const RaffleProvider = ({ children }) => {
         id: newRaffleRef.id, // Include ID for local state
         userId: user.uid,
         title,
+        drawDate: drawDate || null,
         prizes: prizes.filter(p => p.trim() !== ''),
         ticketCount: finalCount,
         template,
@@ -153,7 +154,7 @@ export const RaffleProvider = ({ children }) => {
     const currentRaffle = raffles.find(r => r.id === id);
     if (!currentRaffle) return;
 
-    const { title, prizes, ticketCount, customCount, template, image, ticketColor } = data;
+    const { title, prizes, ticketCount, customCount, template, image, ticketColor, drawDate } = data;
     const finalCount = customCount ? parseInt(customCount) : parseInt(ticketCount);
 
     // Logic to adjust tickets array size preserving existing data
@@ -176,6 +177,7 @@ export const RaffleProvider = ({ children }) => {
       const raffleRef = doc(db, "raffles", id);
       updateDoc(raffleRef, {
         title,
+        drawDate: drawDate || null,
         prizes: prizes.filter(p => p.trim() !== ''),
         ticketCount: finalCount,
         template,

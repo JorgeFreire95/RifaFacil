@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useRaffle } from '../context/RaffleContext';
-import { ArrowLeft, User, Phone, Save, Share2 as Share, Check, X, Dices, Edit } from 'lucide-react';
+import { ArrowLeft, User, Phone, Save, Share2 as Share, Check, X, Dices, Edit, Calendar } from 'lucide-react';
 
 const RaffleDetails = () => {
     const { id } = useParams();
@@ -119,6 +119,23 @@ const RaffleDetails = () => {
                     {/* Info Section */}
                     <div className="board-header">
                         <h2 className="board-title">{raffle.title}</h2>
+                        {raffle.drawDate && (
+                            <div className="draw-date-badge" style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                fontSize: '0.9rem',
+                                opacity: 0.9,
+                                marginBottom: '12px',
+                                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                padding: '4px 12px',
+                                borderRadius: '20px',
+                                width: 'fit-content'
+                            }}>
+                                <Calendar size={16} />
+                                <span>Sorteo: {new Date(raffle.drawDate + 'T12:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                            </div>
+                        )}
                         <div className="prizes-list">
                             <h4 style={{ opacity: 0.9 }}>Premios:</h4>
                             {raffle.prizes.map((p, i) => (

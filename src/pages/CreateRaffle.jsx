@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useRaffle } from '../context/RaffleContext';
-import { ArrowLeft, Plus, X, Image as ImageIcon, LayoutTemplate, Loader } from 'lucide-react';
+import { ArrowLeft, Plus, X, Image as ImageIcon, LayoutTemplate, Loader, Calendar } from 'lucide-react';
 import { Dialog } from '@capacitor/dialog';
 
 const CreateRaffle = () => {
@@ -11,6 +11,7 @@ const CreateRaffle = () => {
 
     const [formData, setFormData] = useState({
         title: '',
+        drawDate: '',
         ticketCount: '50',
         customCount: '',
         template: 'random',
@@ -28,6 +29,7 @@ const CreateRaffle = () => {
                 const isCustom = !['25', '50', '100'].includes(String(raffle.ticketCount));
                 setFormData({
                     title: raffle.title,
+                    drawDate: raffle.drawDate || '',
                     ticketCount: isCustom ? 'custom' : String(raffle.ticketCount),
                     customCount: isCustom ? String(raffle.ticketCount) : '',
                     template: raffle.template,
@@ -132,6 +134,19 @@ const CreateRaffle = () => {
                         value={formData.title}
                         onChange={handleInputChange}
                     />
+
+                    <label className="form-label" style={{ marginTop: '16px' }}>Fecha del Sorteo</label>
+                    <div style={{ position: 'relative' }}>
+                        <input
+                            className="input-field"
+                            name="drawDate"
+                            type="date"
+                            value={formData.drawDate}
+                            onChange={handleInputChange}
+                            style={{ paddingLeft: '40px' }}
+                        />
+                        <Calendar size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }} />
+                    </div>
                 </section>
 
                 {/* Numbers Configuration */}
