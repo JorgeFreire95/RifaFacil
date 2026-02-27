@@ -83,27 +83,27 @@ const Home = () => {
                                             <Trash2 size={18} />
                                         </button>
                                     </div>
-
+                                </div>
+                                <div className="raffle-info">
+                                    <div style={{ display: 'flex', gap: '16px' }}>
+                                        <div className="info-item">
+                                            <Ticket size={16} />
+                                            <span>{raffle.ticketCount} Números</span>
+                                        </div>
+                                        <div className="info-item">
+                                            <Trophy size={16} />
+                                            <span>{raffle.prizes.length} Premios</span>
+                                        </div>
+                                        {raffle.drawDate && (
+                                            <div className="info-item" style={{ color: 'var(--success)', fontWeight: 600 }}>
+                                                <Calendar size={16} />
+                                                <span>{new Date(raffle.drawDate + 'T12:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}</span>
+                                            </div>
+                                        )}
+                                    </div>
                                     <span className="status-badge">
                                         {raffle.tickets.filter(t => t.status === 'sold').length} / {raffle.ticketCount} Vendidos
                                     </span>
-                                </div>
-
-                                <div className="raffle-info">
-                                    <div className="info-item">
-                                        <Ticket size={16} />
-                                        <span>{raffle.ticketCount} Números</span>
-                                    </div>
-                                    <div className="info-item">
-                                        <Trophy size={16} />
-                                        <span>{raffle.prizes.length} Premios</span>
-                                    </div>
-                                    {raffle.drawDate && (
-                                        <div className="info-item" style={{ color: 'var(--success)', fontWeight: 600 }}>
-                                            <Calendar size={16} />
-                                            <span>Sorteo: {new Date(raffle.drawDate + 'T12:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}</span>
-                                        </div>
-                                    )}
                                 </div>
                             </div>
                         </Link>

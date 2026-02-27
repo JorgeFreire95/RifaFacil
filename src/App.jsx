@@ -39,7 +39,13 @@ const BackButtonHandler = ({ children }) => {
 };
 
 
+import { notificationService } from './services/notificationService';
+
 function App() {
+  useEffect(() => {
+    notificationService.requestPermissions();
+  }, []);
+
   return (
     <AuthProvider>
       <RaffleProvider>

@@ -14,6 +14,7 @@ import {
   serverTimestamp,
   orderBy
 } from 'firebase/firestore';
+import { notificationService } from '../services/notificationService';
 
 const RaffleContext = createContext();
 
@@ -95,7 +96,12 @@ export const RaffleProvider = ({ children }) => {
 
       try {
         // Use setDoc with the pre-generated ref
-        setDoc(newRaffleRef, raffleData).catch(e => {
+        setDoc(newRaffleRef, raffleData).then(() => {
+          // Schedule notification after successful save
+          if (newRaffle.drawDate) {
+            notificationService.scheduleRaffleReminder(newRaffle);
+          }
+        }).catch(e => {
           console.error("Background write failed (will retry):", e);
         });
       } catch (syncError) {
@@ -143,7 +149,9 @@ export const RaffleProvider = ({ children }) => {
   const deleteRaffle = async (id) => {
     if (!user) return;
     try {
-      deleteDoc(doc(db, "raffles", id)).catch(e => console.error("Delete bg error"));
+      deleteDoc(doc(db, "raffles", id)).then(() => {
+        notificationService.cancelRaffleReminder(id);
+      }).catch(e => console.error("Delete bg error"));
     } catch (e) {
       console.error("Error deleting raffle: ", e);
     }
@@ -184,6 +192,14 @@ export const RaffleProvider = ({ children }) => {
         ticketColor: ticketColor || currentRaffle.ticketColor || '#06b6d4',
         image: image || currentRaffle.image,
         tickets: currentTickets
+      }).then(() => {
+        // Reschedule notification
+        const updatedRaffle = { ...currentRaffle, ...data, tickets: currentTickets };
+        if (updatedRaffle.drawDate) {
+          notificationService.scheduleRaffleReminder(updatedRaffle);
+        } else {
+          notificationService.cancelRaffleReminder(id);
+        }
       }).catch(e => console.log("Update bg error", e));
     } catch (e) {
       console.error("Error updating raffle: ", e);
