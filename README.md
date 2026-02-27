@@ -14,8 +14,9 @@ El proyecto utiliza un conjunto moderno de tecnologías para garantizar rendimie
 ### Móvil & Híbrido (Capacitor v8)
 - **@capacitor/core**: Núcleo del runtime nativo.
 - **@capacitor-firebase/authentication**: **Google Sign-In Nativo** para una autenticación fluida sin redirecciones web.
-- **@capacitor/dialog**: Alertas y confirmaciones nativas del sistema operativo.
-- **@capacitor/app**: Gestión del ciclo de vida de la aplicación.
+- @capacitor/dialog: Alertas y confirmaciones nativas del sistema operativo.
+- @capacitor/local-notifications: **Recordatorios Inteligentes** para notificar sorteos antes de que ocurran.
+- @capacitor/app: Gestión del ciclo de vida de la aplicación.
 
 ### Backend & Servicios (Firebase)
 - **Firebase Authentication**:
@@ -40,18 +41,23 @@ El proyecto utiliza un conjunto moderno de tecnologías para garantizar rendimie
    - **Auto-Logout**: La sesión se destruye al forzar el cierre de la app para máxima privacidad.
 
 2. **Gestión de Rifas (CRUD Optimista)**:
-   - Crear, Editar y Eliminar rifas con **feedback instantáneo** (Zero-latency UI).
-   - Soporte para imágenes personalizadas en los cartones.
-   - Control de estados: Cartones Aleatorios vs Personalizados.
+   - Crear, Editar y Eliminar rifas con **feedback instantáneo**.
+   - **Fechas de Sorteo**: Programación de la fecha del evento con visualización clara.
+   - Soporte para imágenes personalizadas o colores aleatorios en los cartones.
+   - Control de estados: Cartones Aleatorios vs Imágenes.
 
-3. **Venta y Control de Tickets**:
-   - Selección interactiva de números.
-   - Registro de compradores con validación de datos.
-   - Estado visual de tickets (Disponibles / Vendidos).
+3. **Notificaciones & Recordatorios**:
+   - Programación automática de alertas 24 horas antes del sorteo.
+   - Notificaciones nativas que funcionan en segundo plano.
 
-4. **Sorteos Interactivos**:
-   - Ruleta virtual con animación de desaceleración física.
-   - Celebración con efectos visuales para el ganador.
+4. **Venta y Control de Tickets**:
+   - Selección interactiva de números en un tablero dinámico.
+   - Registro de compradores con nombre y teléfono.
+   - Estado visual en tiempo real de tickets (Disponibles / Vendidos).
+
+5. **Sorteos Interactivos**:
+   - Animación de ruleta digital con física de desaceleración.
+   - Detección de ganadores y celebración visual.
 
 ## 🚀 Cómo Ejecutar (Desarrollo)
 
