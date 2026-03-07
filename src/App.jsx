@@ -1,6 +1,8 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
-import { App as CapacitorApp } from '@capacitor/app'; // Import Capacitor App Plugin
+import { App as CapacitorApp } from '@capacitor/app';
+import { StatusBar, Style } from '@capacitor/status-bar';
+import { SplashScreen } from '@capacitor/splash-screen';
 import { RaffleProvider } from './context/RaffleContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Home from './pages/Home';
@@ -43,6 +45,21 @@ import { notificationService } from './services/notificationService';
 
 function App() {
   useEffect(() => {
+    // Initialize Native UI
+    const initNative = async () => {
+      try {
+        // Hide Splash Screen
+        await SplashScreen.hide();
+
+        // Style Status Bar (Match dark theme)
+        await StatusBar.setStyle({ style: Style.Dark });
+        await StatusBar.setBackgroundColor({ color: '#0f172a' }); // Match --bg-gradient start
+      } catch (e) {
+        console.warn('Native APIs not available in browser');
+      }
+    };
+
+    initNative();
     notificationService.requestPermissions();
   }, []);
 

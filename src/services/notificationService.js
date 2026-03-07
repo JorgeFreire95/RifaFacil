@@ -21,11 +21,13 @@ export const notificationService = {
         if (!Capacitor.isNativePlatform() || !raffle.drawDate) return;
 
         try {
-            // 1. Calculate notification time: 1 day before drawDate at 12:00 PM
-            const drawDate = new Date(raffle.drawDate + 'T12:00:00');
+            // 1. Calculate notification time: 1 hour before drawDate/drawTime
+            const timeString = raffle.drawTime ? `T${raffle.drawTime}:00` : 'T12:00:00';
+            const drawDate = new Date(raffle.drawDate + timeString);
             const notificationDate = new Date(drawDate.getTime());
-            notificationDate.setDate(notificationDate.getDate() - 1);
-            notificationDate.setHours(12, 0, 0, 0);
+
+            // Subtract 1 hour (3600000 ms)
+            notificationDate.setHours(notificationDate.getHours() - 1);
 
             // 2. Check if notification date is in the future
             if (notificationDate.getTime() <= Date.now()) {
@@ -45,8 +47,8 @@ export const notificationService = {
             await LocalNotifications.schedule({
                 notifications: [
                     {
-                        title: 'Recordatorio de Sorteo',
-                        body: `Recuerda que mañana tienes un sorteo de una de tus rifas: ${raffle.title}`,
+                        title: '¡Sorteo en 1 hora!',
+                        body: `Tu rifa "${raffle.title}" se sorteará pronto. ¡Buena suerte!`,
                         id: notificationId,
                         schedule: { at: notificationDate },
                         sound: null,

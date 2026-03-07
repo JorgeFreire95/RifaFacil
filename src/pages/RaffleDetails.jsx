@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useRaffle } from '../context/RaffleContext';
 import { ArrowLeft, User, Phone, Save, Share2 as Share, Check, X, Dices, Edit, Calendar } from 'lucide-react';
+import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
 
 const RaffleDetails = () => {
     const { id } = useParams();
@@ -28,6 +29,7 @@ const RaffleDetails = () => {
 
     const handleTicketClick = (ticket) => {
         if (isDrawing) return; // Prevent clicks during draw
+        Haptics.impact({ style: ImpactStyle.Light }); // Tactile feedback
         setSelectedTicket(ticket);
         setClientInfo(ticket.holder || { name: '', phone: '' });
         setModalOpen(true);
@@ -63,6 +65,12 @@ const RaffleDetails = () => {
             // Pick random number for animation
             const randomNum = Math.floor(Math.random() * raffle.ticketCount) + 1;
             setCurrentDrawNumber(randomNum);
+
+            // Light vibration during the "spinning"
+            if (counter % 2 === 0) {
+                Haptics.impact({ style: ImpactStyle.Light });
+            }
+
             counter++;
 
             if (counter > maxIterations) {
@@ -80,6 +88,14 @@ const RaffleDetails = () => {
         setCurrentDrawNumber(winningNumber);
         setWinner(winningTicket);
         setIsDrawing(false);
+
+        // Success vibration
+        Haptics.notification({ type: NotificationType.Success });
+    };
+
+    const handleShare = async () => {
+        Haptics.impact({ style: ImpactStyle.Medium });
+        // Share logic placeholder...
     };
 
     return (
@@ -133,7 +149,7 @@ const RaffleDetails = () => {
                                 width: 'fit-content'
                             }}>
                                 <Calendar size={16} />
-                                <span>Sorteo: {new Date(raffle.drawDate + 'T12:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                                <span>Sorteo: {new Date(raffle.drawDate + 'T12:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })} {raffle.drawTime && ` a las ${raffle.drawTime}`}</span>
                             </div>
                         )}
                         <div className="prizes-list">

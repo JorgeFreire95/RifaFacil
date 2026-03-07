@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useRaffle } from '../context/RaffleContext';
 import { Plus, Ticket, Trophy, Trash2, LogOut, Edit, Loader, Cloud, CloudOff, Calendar } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
 
 const Home = () => {
     const { raffles, deleteRaffle, loading, error, isSynced } = useRaffle();
@@ -11,13 +12,20 @@ const Home = () => {
 
     const handleDelete = (e, id) => {
         e.preventDefault(); // Prevent navigation to details
+        Haptics.impact({ style: ImpactStyle.Medium });
         if (window.confirm('¿Estás seguro de que quieres eliminar esta rifa? Esta acción no se puede deshacer.')) {
             deleteRaffle(id);
         }
     };
 
+    const handleLogout = () => {
+        Haptics.impact({ style: ImpactStyle.Light });
+        logout();
+    };
+
     const handleEdit = (e, id) => {
         e.preventDefault();
+        Haptics.impact({ style: ImpactStyle.Light });
         navigate(`/edit/${id}`);
     };
 
@@ -39,7 +47,7 @@ const Home = () => {
                         )}
                     </div>
                 </div>
-                <button onClick={logout} className="logout-btn">
+                <button onClick={handleLogout} className="logout-btn">
                     <LogOut size={24} />
                 </button>
             </header>
@@ -64,7 +72,12 @@ const Home = () => {
                     </div>
                 ) : (
                     raffles.map((raffle) => (
-                        <Link to={`/raffle/${raffle.id}`} key={raffle.id} style={{ textDecoration: 'none', color: 'inherit', position: 'relative', display: 'block' }}>
+                        <Link
+                            to={`/raffle/${raffle.id}`}
+                            key={raffle.id}
+                            style={{ textDecoration: 'none', color: 'inherit', position: 'relative', display: 'block' }}
+                            onClick={() => Haptics.impact({ style: ImpactStyle.Light })}
+                        >
                             <div className="glass-panel raffle-card">
                                 <div className="raffle-card-header">
                                     <h3 className="raffle-title">{raffle.title}</h3>
@@ -94,12 +107,13 @@ const Home = () => {
                                             <Trophy size={16} />
                                             <span>{raffle.prizes.length} Premios</span>
                                         </div>
-                                        {raffle.drawDate && (
-                                            <div className="info-item" style={{ color: 'var(--success)', fontWeight: 600 }}>
-                                                <Calendar size={16} />
-                                                <span>{new Date(raffle.drawDate + 'T12:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}</span>
-                                            </div>
-                                        )}
+                                        <div className="info-item" style={{ color: 'var(--success)', fontWeight: 600 }}>
+                                            <Calendar size={16} />
+                                            <span>
+                                                {new Date(raffle.drawDate + 'T12:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
+                                                {raffle.drawTime && ` - ${raffle.drawTime}`}
+                                            </span>
+                                        </div>
                                     </div>
                                     <span className="status-badge">
                                         {raffle.tickets.filter(t => t.status === 'sold').length} / {raffle.ticketCount} Vendidos
@@ -111,7 +125,11 @@ const Home = () => {
                 )}
             </div>
 
-            <Link to="/create" className="btn-primary fab-add">
+            <Link
+                to="/create"
+                className="btn-primary fab-add"
+                onClick={() => Haptics.impact({ style: ImpactStyle.Medium })}
+            >
                 <Plus size={24} />
             </Link>
         </div>

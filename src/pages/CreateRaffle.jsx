@@ -12,6 +12,7 @@ const CreateRaffle = () => {
     const [formData, setFormData] = useState({
         title: '',
         drawDate: '',
+        drawTime: '', // New field
         ticketCount: '50',
         customCount: '',
         template: 'random',
@@ -30,6 +31,7 @@ const CreateRaffle = () => {
                 setFormData({
                     title: raffle.title,
                     drawDate: raffle.drawDate || '',
+                    drawTime: raffle.drawTime || '', // New field
                     ticketCount: isCustom ? 'custom' : String(raffle.ticketCount),
                     customCount: isCustom ? String(raffle.ticketCount) : '',
                     template: raffle.template,
@@ -135,17 +137,31 @@ const CreateRaffle = () => {
                         onChange={handleInputChange}
                     />
 
-                    <label className="form-label" style={{ marginTop: '16px' }}>Fecha del Sorteo</label>
-                    <div style={{ position: 'relative' }}>
-                        <input
-                            className="input-field"
-                            name="drawDate"
-                            type="date"
-                            value={formData.drawDate}
-                            onChange={handleInputChange}
-                            style={{ paddingLeft: '40px' }}
-                        />
-                        <Calendar size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }} />
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '16px' }}>
+                        <div>
+                            <label className="form-label">Fecha del Sorteo</label>
+                            <div style={{ position: 'relative' }}>
+                                <input
+                                    className="input-field"
+                                    name="drawDate"
+                                    type="date"
+                                    value={formData.drawDate}
+                                    onChange={handleInputChange}
+                                    style={{ paddingLeft: '40px' }}
+                                />
+                                <Calendar size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }} />
+                            </div>
+                        </div>
+                        <div>
+                            <label className="form-label">Hora</label>
+                            <input
+                                className="input-field"
+                                name="drawTime"
+                                type="time"
+                                value={formData.drawTime}
+                                onChange={handleInputChange}
+                            />
+                        </div>
                     </div>
                 </section>
 
