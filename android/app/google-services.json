@@ -41,6 +41,35 @@
           ]
         }
       }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:621778931438:android:e509f0011dde035d8aadff",
+        "android_client_info": {
+          "package_name": "com.jorge.rifafacil"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "621778931438-chajkbhre35lcu2j4iddj2cnn9h8qh35.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBtTtUYmR0pDUmIPKLg3XdTFpQazxgi_ic"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "621778931438-chajkbhre35lcu2j4iddj2cnn9h8qh35.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
     }
   ],
   "configuration_version": "1"
