@@ -4,7 +4,7 @@ android {
     namespace = "Rifa.Facil"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "Rifa.Facil"
+        applicationId "com.jorge.rifafacil"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
