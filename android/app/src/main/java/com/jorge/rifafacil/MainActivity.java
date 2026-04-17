@@ -1,4 +1,4 @@
-package com.jorge.rifas;
+package com.jorge.rifafacil;
 
 import com.getcapacitor.BridgeActivity;
 
