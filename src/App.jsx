@@ -9,6 +9,8 @@ import Home from './pages/Home';
 import CreateRaffle from './pages/CreateRaffle';
 import RaffleDetails from './pages/RaffleDetails';
 import Login from './pages/Login';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import { notificationService } from './services/notificationService';
 
 // Protected Route Component
 const PrivateRoute = ({ children }) => {
@@ -70,6 +72,7 @@ function App() {
           <BackButtonHandler>
             <Routes>
               <Route path="/login" element={<Login />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
 
               <Route path="/" element={
                 <PrivateRoute>

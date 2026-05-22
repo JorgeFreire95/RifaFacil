@@ -94,3 +94,11 @@ El proyecto utiliza un conjunto moderno de tecnologías para garantizar rendimie
    npx cap open android
    ```
    *Desde aquí puedes ejecutar el emulador o instalar en dispositivo físico.*
+## 🛡️ Cumplimiento de Google Play
+
+- Esta app incluye un aviso de privacidad en la ruta `/privacy-policy` y un archivo estático en `public/privacy-policy.html`.
+- Si publicas en Google Play, completa el formulario de Data Safety con los datos usados en la app:
+  - Autenticación de usuario (email, nombre, teléfono opcional).
+  - Notificaciones locales.
+  - Firebase como servicio de backend.
+- Asegúrate de usar un `applicationId` consistente (`com.jorge.rifafacil`) y declarar los permisos necesarios en `android/app/src/main/AndroidManifest.xml`, incluyendo `POST_NOTIFICATIONS`.

@@ -222,6 +222,11 @@ const Login = () => {
                     >
                         {isLogin ? '¿No tienes cuenta? Regístrate' : '¿Ya tienes cuenta? Inicia Sesión'}
                     </button>
+                    <div style={{ marginTop: '0.75rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                        <a href="/privacy-policy" style={{ color: 'inherit', textDecoration: 'underline' }}>
+                            Aviso de privacidad
+                        </a>
+                    </div>
                 </div>
             </div>
 

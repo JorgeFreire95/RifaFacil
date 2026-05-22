@@ -136,8 +136,16 @@ export const AuthProvider = ({ children }) => {
 
             if (Capacitor.isNativePlatform()) {
                 // Native Login (Android/iOS)
-                const result = await FirebaseAuthentication.signInWithGoogle();
-                const credential = GoogleAuthProvider.credential(result.credential.idToken);
+                // On Android, the Google Credential Manager may return "no credentials available"
+                // if there is no stored account. Disable it to force the account picker.
+                const result = await FirebaseAuthentication.signInWithGoogle({ useCredentialManager: false });
+                if (!result.credential || (!result.credential.idToken && !result.credential.accessToken)) {
+                    throw new Error('No se obtuvieron credenciales de Google. Intenta iniciar sesión de nuevo.');
+                }
+                const credential = GoogleAuthProvider.credential(
+                    result.credential.idToken || null,
+                    result.credential.accessToken || null
+                );
                 const authResult = await signInWithCredential(auth, credential);
                 user = authResult.user;
             } else {
