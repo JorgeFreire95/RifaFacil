@@ -42,9 +42,6 @@ const BackButtonHandler = ({ children }) => {
   return children;
 };
 
-
-import { notificationService } from './services/notificationService';
-
 function App() {
   useEffect(() => {
     // Initialize Native UI
