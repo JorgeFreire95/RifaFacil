@@ -51,6 +51,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "621778931438-43csue4okggtg75q1bec8r472a74h4p4.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.jorge.rifafacil",
+            "certificate_hash": "0b109ffb52691251f9aad065aee952abf8a07f37"
+          }
+        },
+        {
           "client_id": "621778931438-7gu4rrbg46ae0k7ne2sde1d57k56pot8.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
