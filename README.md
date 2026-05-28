@@ -1,104 +1,119 @@
 # RifaFacil - App de Rifas (Híbrida & Nativa)
 
-Esta aplicación permite crear, gestionar y jugar rifas de manera sencilla y profesional. Está construida para funcionar como una **aplicación nativa de alto rendimiento** en Android e iOS, sincronizando todos los datos en tiempo real mediante Firebase.
+**[Descargar en Google Play](https://play.google.com/store/apps/details?id=com.jorge.rifafacil)**
 
-## 🛠️ Stack Tecnológico
+Esta aplicación permite crear, gestionar y jugar rifas de manera sencilla y profesional. Está construida para funcionar como una **aplicación nativa de alto rendimiento** en Android e iOS.
 
-El proyecto utiliza un conjunto moderno de tecnologías para garantizar rendimiento, seguridad y escalabilidad:
+---
 
-### Core & Frameworks
-- **React.js (v19)**: Motor principal de la interfaz, utilizando las últimas características como Hooks avanzados.
-- **Vite**: Bundler de última generación para una compilación ultrarrápida.
-- **Javascript (ES6+)**: Lógica robusta y moderna.
+## 🛠️ Stack Tecnológico y Base de Datos
 
-### Móvil & Híbrido (Capacitor v8)
-- **@capacitor/core**: Núcleo del runtime nativo.
-- **@capacitor-firebase/authentication**: **Google Sign-In Nativo** para una autenticación fluida sin redirecciones web.
-- @capacitor/dialog: Alertas y confirmaciones nativas del sistema operativo.
-- @capacitor/local-notifications: **Recordatorios Inteligentes** para notificar sorteos antes de que ocurran.
-- @capacitor/app: Gestión del ciclo de vida de la aplicación.
+- **Frontend / Interfaz**: React.js (v19), Vite, CSS Custom (Glassmorphism), Lucide React.
+- **Framework Híbrido / Nativo**: Capacitor v8 (permite acceso a APIs nativas y compilación para Android/iOS).
+- **Lenguaje Principal**: JavaScript (ES6+).
+- **Base de Datos**: Cloud Firestore (Base de datos NoSQL de Firebase, con sincronización en tiempo real).
+- **Backend / Servicios**: Firebase Authentication (para login con Google) y almacenamiento en la nube.
 
-### Backend & Servicios (Firebase)
-- **Firebase Authentication**:
-  - Login con Google (Nativo en Android/iOS, Popup en Web).
-  - Registro por Email/Password.
-  - **Seguridad de Sesión**: Configurado con `browserSessionPersistence` para cerrar sesión automáticamente al cerrar la app (seguridad bancaria).
-- **Cloud Firestore**:
-  - Base de datos NoSQL en tiempo real.
-  - **Sincronización Optimista**: La interfaz se actualiza instantáneamente mientras los datos se guardan en segundo plano.
-  - **Estado de Red**: Detección automática de conexión (Indicadores: "Datos en la nube" vs "Pendiente").
-  
-### Estilos & UI
-- **Glassmorphism Custom CSS**: Diseño premium con efectos de cristal, gradientes y animaciones fluidas.
-- **Lucide React**: Iconografía vectorial ligera y moderna.
-- **Fuentes**: 'Outfit' (Google Fonts) para una tipografía limpia.
+---
 
-## 📱 Funcionalidades Principales
+## 🏗️ Arquitectura de 3 Capas (3-Tier Architecture)
 
-1. **Gestión de Usuarios Avanzada**:
-   - Inicio de sesión nativo con Google (One-tap).
-   - Protección de rutas y redirección inteligente.
-   - **Auto-Logout**: La sesión se destruye al forzar el cierre de la app para máxima privacidad.
+El proyecto está diseñado siguiendo una arquitectura de tres capas para asegurar la separación de responsabilidades, mantenibilidad y escalabilidad.
 
-2. **Gestión de Rifas (CRUD Optimista)**:
-   - Crear, Editar y Eliminar rifas con **feedback instantáneo**.
-   - **Fechas de Sorteo**: Programación de la fecha del evento con visualización clara.
-   - Soporte para imágenes personalizadas o colores aleatorios en los cartones.
-   - Control de estados: Cartones Aleatorios vs Imágenes.
+### 1. Capa de Presentación (UI Layer)
+Encargada de la interacción con el usuario y de mostrar la información de forma intuitiva y atractiva.
+- **Frameworks**: React.js (v19) y Vite.
+- **Estilos**: Glassmorphism Custom CSS, animaciones fluidas y Lucide React para iconografía.
+- **Móvil/Híbrido**: Capacitor v8 para acceso a características nativas de la interfaz (alertas, diálogos).
 
-3. **Notificaciones & Recordatorios**:
-   - Programación automática de alertas 24 horas antes del sorteo.
-   - Notificaciones nativas que funcionan en segundo plano.
+### 2. Capa de Lógica de Negocio (Business Logic Layer)
+Gestiona las reglas de la aplicación, el procesamiento de datos y la comunicación entre la interfaz de usuario y los datos.
+- **Core Lógico**: Javascript (ES6+) estructurado a través de Hooks avanzados de React.
+- **Manejo de Estados**: Sincronización optimista (la interfaz responde instantáneamente al usuario mientras se validan y actualizan los datos en segundo plano).
+- **Servicios Nativos**: 
+  - Gestión de ciclo de vida con `@capacitor/app`.
+  - Notificaciones locales (programación de alertas 24hs antes del sorteo) usando `@capacitor/local-notifications`.
 
-4. **Venta y Control de Tickets**:
-   - Selección interactiva de números en un tablero dinámico.
-   - Registro de compradores con nombre y teléfono.
-   - Estado visual en tiempo real de tickets (Disponibles / Vendidos).
+### 3. Capa de Datos (Data Layer)
+Responsable del almacenamiento persistente, sincronización en la nube y autenticación segura de los usuarios.
+- **Base de Datos**: Cloud Firestore (Base de datos NoSQL con sincronización en tiempo real).
+- **Autenticación**: Firebase Authentication.
+  - Login nativo con Google (`@capacitor-firebase/authentication`).
+  - Seguridad de sesión (Configurado con `browserSessionPersistence` para Auto-Logout al forzar el cierre de la app).
+- **Red/Offline**: Detección automática del estado de conexión e indicadores ("Datos en la nube" vs "Pendiente").
 
-5. **Sorteos Interactivos**:
-   - Animación de ruleta digital con física de desaceleración.
-   - Detección de ganadores y celebración visual.
+---
 
-## 🚀 Cómo Ejecutar (Desarrollo)
+## 🏃 Metodología Ágil (Scrum)
 
+El desarrollo y evolución de RifaFacil se gestiona utilizando el marco de trabajo Scrum, iterando sobre el producto para entregar valor continuo.
+
+### 👥 Roles
+- **Product Owner**: Define la visión del producto y prioriza el Product Backlog (enfocado en maximizar el valor para los organizadores de rifas y compradores).
+- **Scrum Master**: Facilita el proceso de desarrollo, elimina impedimentos técnicos (ej. problemas de compilación nativa o de despliegue).
+- **Development Team**: Desarrolla los incrementos de producto abarcando todo el stack (Frontend React, Backend Serverless con Firebase, Integración Nativa Capacitor).
+
+### 🎯 Épicas y Product Backlog
+Las funcionalidades principales del sistema están divididas en las siguientes Épicas de desarrollo:
+
+1. **Épica 1: Gestión Segura de Usuarios**
+   - *User Story*: Como organizador, quiero iniciar sesión rápidamente con Google (One-tap) para no tener que recordar otra contraseña.
+   - *User Story*: Como usuario, quiero que mi sesión se cierre automáticamente al salir de la app para máxima privacidad.
+
+2. **Épica 2: Gestión de Rifas (CRUD Optimista)**
+   - *User Story*: Como organizador, quiero crear, editar y eliminar una rifa obteniendo feedback visual instantáneo.
+   - *User Story*: Como organizador, quiero personalizar los cartones de mi rifa con imágenes específicas o colores aleatorios.
+
+3. **Épica 3: Venta y Control de Tickets**
+   - *User Story*: Como vendedor, quiero interactuar con un tablero dinámico para seleccionar y marcar tickets como vendidos.
+   - *User Story*: Como vendedor, quiero registrar el nombre y teléfono del comprador para contactarlo si gana.
+   - *User Story*: Como usuario, quiero ver el estado visual en tiempo real de los tickets (Disponibles / Vendidos).
+
+4. **Épica 4: Experiencia de Sorteo y Recordatorios**
+   - *User Story*: Como participante, quiero ver una animación de ruleta digital con física de desaceleración al realizar el sorteo para mayor emoción.
+   - *User Story*: Como organizador, quiero que la app notifique automáticamente en segundo plano 24 horas antes del evento.
+
+### 🔄 Sprint Workflow (Desarrollo Continuo)
+Cada iteración (Sprint) sigue el ciclo de construcción, prueba e integración:
+- **Planning**: Selección de Historias de Usuario prioritarias para la siguiente versión de la aplicación.
+- **Daily Stand-up**: Sincronización del progreso diario (alineando esfuerzos entre la UI y la integración con Firebase).
+- **Review**: Demostración del incremento de software funcionando (Builds de prueba para Android).
+- **Retrospective**: Análisis para la mejora continua del código, la arquitectura y la experiencia de usuario.
+
+---
+
+## 🚀 Guía del Desarrollador (Sprint Execution)
+
+### Configuración del Entorno de Desarrollo (Local)
 1. **Instalar dependencias**:
    ```bash
    npm install
    ```
-
-2. **Configurar Firebase**:
-   - Asegúrate de tener los archivos:
-     - `src/firebaseConfig.js` (Web SDK)
-     - `android/app/google-services.json` (Android Nativo)
-
-3. **Ejecutar en Navegador**:
+2. **Configurar Firebase**: Asegúrate de tener los archivos de credenciales:
+   - `src/firebaseConfig.js` (Web SDK)
+   - `android/app/google-services.json` (Android Nativo)
+3. **Ejecutar en Navegador (Testeo rápido de UI)**:
    ```bash
    npm run dev
    ```
 
-## 🤖 Compilar para Android (Producción)
-
+### Despliegue y Producción (Release Increment)
 1. **Generar build optimizada**:
    ```bash
    npm run build
    ```
-
-2. **Sincronizar código nativo**:
+2. **Sincronizar código nativo (Capacitor)**:
    ```bash
    npx cap sync
    ```
-   *Esto copia los assets y actualiza los plugins nativos.*
-
+   *Esto copia los assets compilados y actualiza los plugins nativos necesarios.*
 3. **Abrir en Android Studio**:
    ```bash
    npx cap open android
    ```
-   *Desde aquí puedes ejecutar el emulador o instalar en dispositivo físico.*
-## 🛡️ Cumplimiento de Google Play
+   *Desde aquí se ejecuta el emulador o se compila el APK/AAB para su distribución.*
 
-- Esta app incluye un aviso de privacidad en la ruta `/privacy-policy` y un archivo estático en `public/privacy-policy.html`.
-- Si publicas en Google Play, completa el formulario de Data Safety con los datos usados en la app:
-  - Autenticación de usuario (email, nombre, teléfono opcional).
-  - Notificaciones locales.
-  - Firebase como servicio de backend.
-- Asegúrate de usar un `applicationId` consistente (`com.jorge.rifafacil`) y declarar los permisos necesarios en `android/app/src/main/AndroidManifest.xml`, incluyendo `POST_NOTIFICATIONS`.
+## 🛡️ Cumplimiento de Google Play (Requisitos de Publicación)
+- **Aviso de Privacidad**: El documento legal estático está disponible en la ruta `/privacy-policy` (`public/privacy-policy.html`).
+- **Data Safety Form**: Se declara en la consola el uso de Autenticación de usuario (email, nombre, teléfono opcional), Notificaciones locales y Firebase.
+- **Permisos y Configuración**: Uso consistente del `applicationId` (`com.jorge.rifafacil`) y declaración de permisos en el `AndroidManifest.xml`, incluyendo `POST_NOTIFICATIONS` para los recordatorios de los sorteos.
