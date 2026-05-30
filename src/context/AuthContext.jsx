@@ -1,20 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import {
-    createUserWithEmailAndPassword,
-    signInWithEmailAndPassword,
-    signOut,
-    onAuthStateChanged,
-    setPersistence,
-    GoogleAuthProvider,
-    signInWithPopup,
-    signInWithCredential,
-    browserSessionPersistence,
-    sendPasswordResetEmail // Import this
-} from "firebase/auth";
-import { doc, setDoc, getDoc } from "firebase/firestore";
+import { supabase } from '../supabaseConfig';
 import { Capacitor } from '@capacitor/core';
-import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
-import { auth, db } from '../firebaseConfig';
 
 const AuthContext = createContext();
 
@@ -24,92 +10,120 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    // Configure Persistence to SESSION (clears on app close)
     useEffect(() => {
-        const configurePersistence = async () => {
-            try {
-                await setPersistence(auth, browserSessionPersistence);
-            } catch (err) {
-                console.error("Error setting persistence:", err);
-            }
-        };
-        configurePersistence();
-    }, []);
-
-    // Listen to Firebase Auth state
-    useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-            if (currentUser) {
-                try {
-                    const userDoc = await getDoc(doc(db, "users", currentUser.uid));
-                    if (userDoc.exists()) {
-                        setUser({ uid: currentUser.uid, email: currentUser.email, ...userDoc.data() });
-                    } else {
-                        setUser({ uid: currentUser.uid, email: currentUser.email });
-                    }
-                } catch (e) {
-                    console.error("Firestore error in auth listener:", e);
-                    setUser({ uid: currentUser.uid, email: currentUser.email });
-                }
+        // Initial session check
+        supabase.auth.getSession().then((response) => {
+            const session = response?.data?.session;
+            if (session?.user) {
+                fetchUserProfile(session.user);
             } else {
                 setUser(null);
+                setLoading(false);
             }
+        }).catch(err => {
+            console.error("Session fetch error:", err);
+            setUser(null);
             setLoading(false);
         });
-        return () => unsubscribe();
+
+        // Listen for auth changes
+        let subscription;
+        try {
+            const res = supabase.auth.onAuthStateChange(async (_event, session) => {
+                if (session?.user) {
+                    await fetchUserProfile(session.user);
+                } else {
+                    setUser(null);
+                    setLoading(false);
+                }
+            });
+            subscription = res?.data?.subscription;
+        } catch (e) {
+            console.error("Auth listener error:", e);
+            setLoading(false);
+        }
+
+        return () => {
+            if (subscription) subscription.unsubscribe();
+        };
     }, []);
+
+    const fetchUserProfile = async (authUser) => {
+        try {
+            const { data, error } = await supabase
+                .from('users')
+                .select('*')
+                .eq('id', authUser.id)
+                .single();
+            
+            if (error && error.code !== 'PGRST116') {
+                console.error("Error fetching user profile:", error);
+            }
+            
+            if (data) {
+                setUser({ uid: authUser.id, email: authUser.email, ...data });
+            } else {
+                setUser({ uid: authUser.id, email: authUser.email });
+            }
+        } catch (e) {
+            console.error("Exception fetching profile:", e);
+            setUser({ uid: authUser.id, email: authUser.email });
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const login = async (email, password) => {
         try {
-            const result = await signInWithEmailAndPassword(auth, email, password);
-            // Explicitly set user to avoid race condition with PrivateRoute
-            setUser({ uid: result.user.uid, email: result.user.email });
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email,
+                password,
+            });
+            if (error) throw error;
             return { success: true };
         } catch (error) {
             console.error(error);
             let msg = 'Error al iniciar sesión';
-            if (error.code === 'auth/invalid-credential') msg = 'Credenciales incorrectas';
-            if (error.code === 'auth/user-not-found') msg = 'Usuario no encontrado';
-            if (error.code === 'auth/wrong-password') msg = 'Contraseña incorrecta';
+            if (error.message.includes('Invalid login credentials')) msg = 'Credenciales incorrectas';
             return { success: false, message: msg };
         }
     };
 
     const register = async (name, email, password) => {
         try {
-            // 1. Create User in Auth
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            const user = userCredential.user;
+            const { data, error } = await supabase.auth.signUp({
+                email,
+                password,
+                options: {
+                    data: {
+                        name: name
+                    }
+                }
+            });
+            if (error) throw error;
 
-            const newUserProfile = {
-                uid: user.uid,
-                name: name,
-                email: email,
-                role: 'user',
-                createdAt: new Date().toISOString(),
-                lastLogin: new Date().toISOString(),
-                provider: 'password',
-                photoURL: user.photoURL || '',
-                phoneNumber: user.phoneNumber || ''
-            };
-
-            // 2. EXPLICITLY SET USER STATE IMMEDIATELY (Optimistic Update)
-            // This ensures the UI unblocks even if Firestore is slow/offline
-            setUser(newUserProfile);
-
-            // 3. Save User Data in Firestore (Background / Non-blocking)
-            setDoc(doc(db, "users", user.uid), newUserProfile)
-                .catch(fsError => {
-                    console.error("Error saving Firestore profile (will sync later):", fsError);
-                });
+            if (data.user) {
+                const newUserProfile = {
+                    id: data.user.id,
+                    name: name,
+                    email: email,
+                    role: 'user',
+                    provider: 'password'
+                };
+                
+                // Set optimistic state
+                setUser({ uid: data.user.id, ...newUserProfile });
+                
+                // Save to users table
+                await supabase.from('users').upsert(newUserProfile);
+            }
 
             return { success: true };
         } catch (error) {
             console.error(error);
             let msg = 'Error al registrarse';
-            if (error.code === 'auth/email-already-in-use') msg = 'El correo ya está registrado';
-            else if (error.code === 'auth/weak-password') msg = 'La contraseña es muy débil';
-            else if (error.code === 'auth/operation-not-allowed') msg = 'El registro por correo no está habilitado en Firebase';
+            if (error.message.includes('already registered')) msg = 'El correo ya está registrado';
+            else if (error.message.includes('weak')) msg = 'La contraseña es muy débil';
             else msg = error.message;
             return { success: false, message: msg };
         }
@@ -117,7 +131,7 @@ export const AuthProvider = ({ children }) => {
 
     const logout = async () => {
         try {
-            await signOut(auth);
+            await supabase.auth.signOut();
             setUser(null);
         } catch (error) {
             console.error("Error signing out", error);
@@ -125,93 +139,25 @@ export const AuthProvider = ({ children }) => {
     };
 
     const checkEmailAvailable = async (email) => {
-        // Firebase handles this on register throws error 'auth/email-already-in-use'
-        // Simulating true for the pre-check flow or could rely on error handling
         return true;
     };
 
-    const loginWithGoogle = async () => {
+
+    const recoverPassword = async (email) => {
         try {
-            let user;
-
-            if (Capacitor.isNativePlatform()) {
-                // Native Login (Android/iOS)
-                // On Android, the Google Credential Manager may return "no credentials available"
-                // if there is no stored account. Disable it to force the account picker.
-                const result = await FirebaseAuthentication.signInWithGoogle({ useCredentialManager: false });
-                if (!result.credential || (!result.credential.idToken && !result.credential.accessToken)) {
-                    throw new Error('No se obtuvieron credenciales de Google. Intenta iniciar sesión de nuevo.');
-                }
-                const credential = GoogleAuthProvider.credential(
-                    result.credential.idToken || null,
-                    result.credential.accessToken || null
-                );
-                const authResult = await signInWithCredential(auth, credential);
-                user = authResult.user;
-            } else {
-                // Web Login
-                const provider = new GoogleAuthProvider();
-                const result = await signInWithPopup(auth, provider);
-                user = result.user;
-            }
-
-            // Optimistic Update: Set user immediately to unblock UI
-            const optimisticUser = {
-                uid: user.uid,
-                name: user.displayName || 'Usuario de Google',
-                email: user.email,
-                photoURL: user.photoURL || '',
-                phoneNumber: user.phoneNumber || '',
-                role: 'user', // Default role until DB sync
-                provider: 'google',
-                createdAt: new Date().toISOString(),
-                lastLogin: new Date().toISOString()
-            };
-            setUser(optimisticUser);
-
-            // Background / Non-blocking DB Sync
-            (async () => {
-                try {
-                    const userRef = doc(db, "users", user.uid);
-                    const userDoc = await getDoc(userRef);
-
-                    if (!userDoc.exists()) {
-                        await setDoc(userRef, optimisticUser);
-                        // No need to setUser again as it matches optimisticUser
-                    } else {
-                        // Merge DB data (e.g. roles, different name) with auth data
-                        // Only update if data is effectively different or adds info
-                        const dbData = userDoc.data();
-                        setUser(prev => ({ ...prev, ...dbData }));
-                    }
-                } catch (err) {
-                    console.error("Background profile sync failed:", err);
-                    // Optionally handle error, but UI is already unblocked
-                }
-            })();
-
+            const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                redirectTo: `${window.location.origin}/reset-password`
+            });
+            if (error) throw error;
             return { success: true };
         } catch (error) {
-            console.error("Google login error", error);
+            console.error("Error sending password reset email", error);
             return { success: false, message: error.message };
         }
     };
 
-    const recoverPassword = async (email) => {
-        try {
-            await sendPasswordResetEmail(auth, email);
-            return { success: true };
-        } catch (error) {
-            console.error("Error sending password reset email", error);
-            let msg = 'Error al enviar el correo de recuperación';
-            if (error.code === 'auth/user-not-found') msg = 'No existe una cuenta con este correo';
-            if (error.code === 'auth/invalid-email') msg = 'El correo electrónico no es válido';
-            return { success: false, message: msg };
-        }
-    };
-
     return (
-        <AuthContext.Provider value={{ user, login, register, logout, loading, checkEmailAvailable, loginWithGoogle, recoverPassword }}>
+        <AuthContext.Provider value={{ user, login, register, logout, loading, checkEmailAvailable, recoverPassword }}>
             {!loading && children}
         </AuthContext.Provider>
     );

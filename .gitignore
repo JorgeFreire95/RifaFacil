@@ -3,6 +3,9 @@ node_modules
 .pnp
 .pnp.js
 
+service-account.json
+scripts/service-account.json
+
 # Testing
 coverage
 

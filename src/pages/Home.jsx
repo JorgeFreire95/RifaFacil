@@ -105,18 +105,20 @@ const Home = () => {
                                         </div>
                                         <div className="info-item">
                                             <Trophy size={16} />
-                                            <span>{raffle.prizes.length} Premios</span>
+                                            <span>{(raffle.prizes || []).length} Premios</span>
                                         </div>
                                         <div className="info-item" style={{ color: 'var(--success)', fontWeight: 600 }}>
                                             <Calendar size={16} />
                                             <span>
-                                                {new Date(raffle.drawDate + 'T12:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
+                                                {raffle.drawDate 
+                                                    ? new Date(raffle.drawDate.split('T')[0] + 'T12:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })
+                                                    : 'Sin fecha'}
                                                 {raffle.drawTime && ` - ${raffle.drawTime}`}
                                             </span>
                                         </div>
                                     </div>
                                     <span className="status-badge">
-                                        {raffle.tickets.filter(t => t.status === 'sold').length} / {raffle.ticketCount} Vendidos
+                                        {(raffle.tickets || []).filter(t => t.status === 'sold').length} / {raffle.ticketCount || 0} Vendidos
                                     </span>
                                 </div>
                             </div>

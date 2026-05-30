@@ -7,11 +7,12 @@ import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
 const RaffleDetails = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { getRaffle, updateTicket } = useRaffle();
+    const { getRaffle, updateTicket, assignPrizeWinner } = useRaffle();
     const raffle = getRaffle(id);
 
     const [selectedTicket, setSelectedTicket] = useState(null);
     const [modalOpen, setModalOpen] = useState(false);
+    const [selectedPrizeIndex, setSelectedPrizeIndex] = useState(0);
 
     // Draw State
     const [showDrawModal, setShowDrawModal] = useState(false);
@@ -21,7 +22,7 @@ const RaffleDetails = () => {
     const drawIntervalRef = useRef(null);
 
     // Modal State
-    const [clientInfo, setClientInfo] = useState({ name: '', phone: '' });
+    const [clientInfo, setClientInfo] = useState({ name: '', phone: '', paymentStatus: 'Pendiente' });
 
     if (!raffle) {
         return <div className="container">Rifa no encontrada</div>;
@@ -31,7 +32,11 @@ const RaffleDetails = () => {
         if (isDrawing) return; // Prevent clicks during draw
         Haptics.impact({ style: ImpactStyle.Light }); // Tactile feedback
         setSelectedTicket(ticket);
-        setClientInfo(ticket.holder || { name: '', phone: '' });
+        setClientInfo({
+            name: ticket.holder?.name || '',
+            phone: ticket.holder?.phone || '',
+            paymentStatus: ticket.holder?.paymentStatus || 'Pendiente'
+        });
         setModalOpen(true);
     };
 
@@ -149,17 +154,61 @@ const RaffleDetails = () => {
                                 width: 'fit-content'
                             }}>
                                 <Calendar size={16} />
-                                <span>Sorteo: {new Date(raffle.drawDate + 'T12:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })} {raffle.drawTime && ` a las ${raffle.drawTime}`}</span>
+                                <span>Sorteo: {raffle.drawDate ? new Date(raffle.drawDate.split('T')[0] + 'T12:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Sin fecha'} {raffle.drawTime && ` a las ${raffle.drawTime}`}</span>
                             </div>
                         )}
-                        <div className="prizes-list">
-                            <h4 style={{ opacity: 0.9 }}>Premios:</h4>
-                            {raffle.prizes.map((p, i) => (
-                                <div key={i} className="prize-tag">
-                                    <div style={{ width: '6px', height: '6px', background: '#fbbf24', borderRadius: '50%' }} />
-                                    {p}
-                                </div>
-                            ))}
+                        <div className="prizes-list" style={{ display: 'grid', gap: '8px', width: '100%', maxWidth: '400px' }}>
+                            <h4 style={{ opacity: 0.9, marginBottom: '4px' }}>Premios (Selecciona uno para el sorteo):</h4>
+                            {raffle.prizes.map((p, i) => {
+                                const prizeName = typeof p === 'string' ? p : p.name;
+                                const winnerInfo = typeof p === 'string' ? null : p.winner;
+                                const isSelected = selectedPrizeIndex === i;
+
+                                return (
+                                    <div 
+                                        key={i} 
+                                        onClick={() => setSelectedPrizeIndex(i)}
+                                        className={`prize-tag ${isSelected ? 'active' : ''}`}
+                                        style={{
+                                            cursor: 'pointer',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'space-between',
+                                            width: '100%',
+                                            backgroundColor: isSelected ? 'rgba(255, 255, 255, 0.25)' : 'rgba(255, 255, 255, 0.08)',
+                                            border: isSelected ? '1px solid #fbbf24' : '1px solid rgba(255, 255, 255, 0.15)',
+                                            padding: '8px 12px',
+                                            borderRadius: '8px',
+                                            transition: 'all 0.2s',
+                                            color: '#fff'
+                                        }}
+                                    >
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <div style={{ 
+                                                width: '8px', 
+                                                height: '8px', 
+                                                background: isSelected ? '#fbbf24' : '#a1a1aa', 
+                                                borderRadius: '50%',
+                                                boxShadow: isSelected ? '0 0 8px #fbbf24' : 'none'
+                                            }} />
+                                            <span style={{ fontWeight: isSelected ? '600' : '400' }}>{prizeName}</span>
+                                        </div>
+                                        {winnerInfo && (
+                                            <span style={{ 
+                                                fontSize: '0.8rem', 
+                                                color: '#fbbf24', 
+                                                fontWeight: '700',
+                                                backgroundColor: 'rgba(251, 191, 36, 0.15)',
+                                                padding: '2px 8px',
+                                                borderRadius: '12px',
+                                                border: '1px solid rgba(251, 191, 36, 0.3)'
+                                            }}>
+                                                🏆 {winnerInfo.name} (N° {winnerInfo.number})
+                                            </span>
+                                        )}
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
 
@@ -172,13 +221,15 @@ const RaffleDetails = () => {
                                 className="ticket-btn"
                                 style={{
                                     backgroundColor: ticket.status === 'sold'
-                                        ? 'rgba(239, 68, 68, 0.9)'
+                                        ? (ticket.holder?.paymentStatus === 'Paga'
+                                            ? 'rgba(34, 197, 94, 0.95)' // Green for Paid
+                                            : 'rgba(239, 68, 68, 0.95)') // Red/Orange for Pending
                                         : (raffle.ticketColor || 'rgba(255, 255, 255, 0.15)'),
-                                    // Removed backdropFilter entirely as it causes massive lag on mobile
                                     border: `1px solid ${ticket.status === 'sold'
-                                        ? 'rgba(239, 68, 68, 0.5)'
+                                        ? (ticket.holder?.paymentStatus === 'Paga'
+                                            ? 'rgba(34, 197, 94, 0.5)'
+                                            : 'rgba(239, 68, 68, 0.5)')
                                         : 'rgba(255, 255, 255, 0.3)'}`,
-                                    // Simplified shadow
                                     boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
                                     fontWeight: '700'
                                 }}
@@ -187,7 +238,9 @@ const RaffleDetails = () => {
                                     textShadow: raffle.ticketColor ? '0 1px 2px rgba(0,0,0,0.3)' : 'none'
                                 }}>{ticket.number}</span>
                                 {ticket.status === 'sold' && (
-                                    <div className="ticket-status">Vendido</div>
+                                    <div className="ticket-status">
+                                        {ticket.holder?.paymentStatus === 'Paga' ? 'Paga' : 'Pendiente'}
+                                    </div>
                                 )}
                             </button>
                         ))}
@@ -232,6 +285,30 @@ const RaffleDetails = () => {
                                 />
                             </div>
 
+                            <div className="input-wrapper">
+                                <label className="form-label">
+                                    Estado de Pago
+                                </label>
+                                <select
+                                    className="input-field"
+                                    value={clientInfo.paymentStatus || 'Pendiente'}
+                                    onChange={e => setClientInfo({ ...clientInfo, paymentStatus: e.target.value })}
+                                    style={{
+                                        background: 'rgba(0, 0, 0, 0.2)',
+                                        color: '#fff',
+                                        border: '1px solid var(--glass-border)',
+                                        borderRadius: '10px',
+                                        padding: '12px',
+                                        width: '100%',
+                                        outline: 'none',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    <option value="Pendiente" style={{ color: '#000' }}>Pendiente</option>
+                                    <option value="Paga" style={{ color: '#000' }}>Paga</option>
+                                </select>
+                            </div>
+
                             <button type="submit" className="btn-primary" style={{ marginTop: '8px' }}>
                                 <Save size={18} /> Guardar Información
                             </button>
@@ -265,9 +342,21 @@ const RaffleDetails = () => {
                                 </div>
 
                                 {winner.holder ? (
-                                    <div style={{ fontSize: '1.5rem' }}>
+                                    <div style={{ fontSize: '1.5rem', display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
                                         <div style={{ fontWeight: 600 }}>{winner.holder.name}</div>
                                         <div style={{ fontSize: '1rem', opacity: 0.7 }}>{winner.holder.phone}</div>
+                                        <span style={{
+                                            fontSize: '0.9rem',
+                                            fontWeight: '700',
+                                            padding: '4px 12px',
+                                            borderRadius: '20px',
+                                            backgroundColor: winner.holder.paymentStatus === 'Paga' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                                            color: winner.holder.paymentStatus === 'Paga' ? '#4ade80' : '#f87171',
+                                            border: `1px solid ${winner.holder.paymentStatus === 'Paga' ? 'rgba(34, 197, 94, 0.4)' : 'rgba(239, 68, 68, 0.4)'}`,
+                                            marginTop: '6px'
+                                        }}>
+                                            {winner.holder.paymentStatus === 'Paga' ? 'Paga' : 'Pendiente'}
+                                        </span>
                                     </div>
                                 ) : (
                                     <div style={{ fontSize: '1.2rem', color: 'var(--text-muted)' }}>
@@ -275,13 +364,49 @@ const RaffleDetails = () => {
                                     </div>
                                 )}
 
-                                <button
-                                    onClick={() => setShowDrawModal(false)}
-                                    className="btn-primary"
-                                    style={{ marginTop: '32px', width: '100%' }}
-                                >
-                                    Cerrar Sorteo
-                                </button>
+                                {winner.holder ? (
+                                    <div style={{ display: 'flex', gap: '12px', width: '100%', marginTop: '32px' }}>
+                                        <button
+                                            onClick={() => {
+                                                if (winner && winner.holder && selectedPrizeIndex !== null) {
+                                                    assignPrizeWinner(raffle.id, selectedPrizeIndex, {
+                                                        name: winner.holder.name,
+                                                        number: winner.number
+                                                    });
+                                                }
+                                                setShowDrawModal(false);
+                                            }}
+                                            className="btn-primary"
+                                            style={{ flex: 1, backgroundColor: '#22c55e', border: 'none', boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3)' }}
+                                        >
+                                            Validar
+                                        </button>
+                                        <button
+                                            onClick={startDraw}
+                                            className="btn-secondary"
+                                            style={{ flex: 1, backgroundColor: '#ef4444', color: '#fff', border: 'none', boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)' }}
+                                        >
+                                            Al Agua
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div style={{ display: 'flex', gap: '12px', width: '100%', marginTop: '32px' }}>
+                                        <button
+                                            onClick={startDraw}
+                                            className="btn-secondary"
+                                            style={{ flex: 1 }}
+                                        >
+                                            Sortear de nuevo
+                                        </button>
+                                        <button
+                                            onClick={() => setShowDrawModal(false)}
+                                            className="btn-primary"
+                                            style={{ flex: 1 }}
+                                        >
+                                            Cerrar
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>

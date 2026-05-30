@@ -30,7 +30,7 @@ const CreateRaffle = () => {
                 const isCustom = !['25', '50', '100'].includes(String(raffle.ticketCount));
                 setFormData({
                     title: raffle.title,
-                    drawDate: raffle.drawDate || '',
+                    drawDate: raffle.drawDate ? raffle.drawDate.split('T')[0] : '',
                     drawTime: raffle.drawTime || '', // New field
                     ticketCount: isCustom ? 'custom' : String(raffle.ticketCount),
                     customCount: isCustom ? String(raffle.ticketCount) : '',

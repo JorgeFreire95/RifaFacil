@@ -1,19 +1,6 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { useAuth } from './AuthContext';
-import { db } from '../firebaseConfig';
-import {
-  collection,
-  addDoc,
-  deleteDoc,
-  doc,
-  updateDoc,
-  setDoc,
-  query,
-  where,
-  onSnapshot,
-  serverTimestamp,
-  orderBy
-} from 'firebase/firestore';
+import { supabase } from '../supabaseConfig';
 import { notificationService } from '../services/notificationService';
 
 const RaffleContext = createContext();
@@ -27,34 +14,61 @@ export const RaffleProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const [isSynced, setIsSynced] = useState(true);
 
-  // Listen to Raffles for current user from Firestore
+  // Listen to Raffles for current user from Supabase
   useEffect(() => {
     if (user) {
       setLoading(true);
       setError(null);
-      const q = query(
-        collection(db, "raffles"),
-        where("userId", "==", user.uid)
-      );
+      
+      const fetchRaffles = async () => {
+        try {
+          const { data, error } = await supabase
+            .from('raffles')
+            .select('*')
+            .eq('user_id', user.uid)
+            .order('created_at', { ascending: false });
 
-      const unsubscribe = onSnapshot(q, { includeMetadataChanges: true }, (snapshot) => {
-        const userRaffles = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-        // Client-side sorting to avoid missing index issues in Firestore
-        userRaffles.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+          if (error) throw error;
+          
+          // Map DB snake_case to app camelCase
+          const mappedRaffles = data.map(r => ({
+            ...r,
+            userId: r.user_id,
+            drawDate: r.draw_date,
+            drawTime: r.draw_time,
+            ticketCount: r.ticket_count,
+            ticketColor: r.ticket_color,
+            createdAt: r.created_at
+          }));
+          
+          setRaffles(mappedRaffles);
+          setIsSynced(true);
+        } catch (err) {
+          console.error("Error fetching raffles:", err);
+          setError("No se pudieron cargar los datos. Verifica tu conexión.");
+        } finally {
+          setLoading(false);
+        }
+      };
 
-        setRaffles(userRaffles);
-        setIsSynced(!snapshot.metadata.hasPendingWrites);
-        setLoading(false);
-      }, (err) => {
-        console.error("Error fetching raffles:", err);
-        setError("No se pudieron cargar los datos. Verifica tu conexión.");
-        setLoading(false);
-      });
+      fetchRaffles();
 
-      return () => unsubscribe();
+      // Set up realtime subscription
+      const subscription = supabase
+        .channel('public:raffles')
+        .on('postgres_changes', { 
+            event: '*', 
+            schema: 'public', 
+            table: 'raffles',
+            filter: `user_id=eq.${user.uid}`
+        }, (payload) => {
+            fetchRaffles(); // Reload on change to keep it simple and synced
+        })
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(subscription);
+      };
     } else {
       setRaffles([]);
     }
@@ -66,52 +80,54 @@ export const RaffleProvider = ({ children }) => {
     const { title, prizes, ticketCount, customCount, template, image, ticketColor, drawDate, drawTime } = data;
     const finalCount = customCount ? parseInt(customCount) : parseInt(ticketCount);
 
-    try {
-      // Create a reference first to get the ID
-      const newRaffleRef = doc(collection(db, "raffles"));
+    const newRaffle = {
+      user_id: user.uid,
+      title,
+      draw_date: drawDate || null,
+      draw_time: drawTime || null,
+      prizes: prizes.filter(p => p.trim() !== '').map(p => ({
+        name: p,
+        winner: null
+      })),
+      ticket_count: finalCount,
+      template,
+      ticket_color: ticketColor || '#06b6d4',
+      image: image || null,
+      tickets: Array.from({ length: finalCount }, (_, i) => ({
+        number: i + 1,
+        status: 'available',
+        holder: null
+      }))
+    };
 
-      const newRaffle = {
-        id: newRaffleRef.id, // Include ID for local state
-        userId: user.uid,
-        title,
-        drawDate: drawDate || null,
-        drawTime: drawTime || null,
-        prizes: prizes.filter(p => p.trim() !== ''),
-        ticketCount: finalCount,
-        template,
-        ticketColor: ticketColor || '#06b6d4',
-        image: image || null,
-        createdAt: new Date().toISOString(),
-        tickets: Array.from({ length: finalCount }, (_, i) => ({
-          number: i + 1,
-          status: 'available',
-          holder: null
-        }))
+    try {
+      const { data: insertedData, error } = await supabase
+        .from('raffles')
+        .insert([newRaffle])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Map back to camelCase for local state and notifications
+      const mappedRaffle = {
+        ...insertedData,
+        userId: insertedData.user_id,
+        drawDate: insertedData.draw_date,
+        drawTime: insertedData.draw_time,
+        ticketCount: insertedData.ticket_count,
+        ticketColor: insertedData.ticket_color,
+        createdAt: insertedData.created_at
       };
 
-      // OPTIMISTIC UPDATE: Update local state immediately
-      setRaffles(prev => [newRaffle, ...prev]);
+      // Optimistic update immediately
+      setRaffles(prev => [mappedRaffle, ...prev]);
 
-      // Save to Firestore
-      const { id, ...raffleData } = newRaffle;
-
-      try {
-        // Use setDoc with the pre-generated ref
-        setDoc(newRaffleRef, raffleData).then(() => {
-          // Schedule notification after successful save
-          if (newRaffle.drawDate) {
-            notificationService.scheduleRaffleReminder(newRaffle);
-          }
-        }).catch(e => {
-          console.error("Background write failed (will retry):", e);
-        });
-      } catch (syncError) {
-        console.error("Synchronous DB error:", syncError);
-        // Alert user to see if it's an import issue or db issue
-        alert("Error interno DB: " + syncError.message);
+      if (mappedRaffle.drawDate) {
+        notificationService.scheduleRaffleReminder(mappedRaffle);
       }
 
-      return newRaffleRef.id;
+      return mappedRaffle.id;
     } catch (e) {
       console.error("Error adding raffle: ", e);
       throw e;
@@ -123,11 +139,9 @@ export const RaffleProvider = ({ children }) => {
   const updateTicket = async (raffleId, ticketNumber, holderInfo) => {
     if (!user) return;
 
-    // Find the raffle in state to get current tickets
     const currentRaffle = raffles.find(r => r.id === raffleId);
     if (!currentRaffle) return;
 
-    // Create updated tickets array
     const updatedTickets = currentRaffle.tickets.map(ticket => {
       if (ticket.number !== ticketNumber) return ticket;
       if (holderInfo) {
@@ -137,22 +151,61 @@ export const RaffleProvider = ({ children }) => {
       }
     });
 
+    // Optimistic update
+    setRaffles(prev => prev.map(r => r.id === raffleId ? { ...r, tickets: updatedTickets } : r));
+
     try {
-      const raffleRef = doc(db, "raffles", raffleId);
-      updateDoc(raffleRef, {
-        tickets: updatedTickets
-      }).catch(e => console.error("Ticket update bg error:", e));
+      const { error } = await supabase
+        .from('raffles')
+        .update({ tickets: updatedTickets })
+        .eq('id', raffleId);
+        
+      if (error) throw error;
     } catch (e) {
       console.error("Error updating ticket: ", e);
     }
   };
 
+  const assignPrizeWinner = async (raffleId, prizeIndex, winnerInfo) => {
+    if (!user) return;
+    const currentRaffle = raffles.find(r => r.id === raffleId);
+    if (!currentRaffle) return;
+
+    const updatedPrizes = currentRaffle.prizes.map((prize, idx) => {
+      if (idx !== prizeIndex) return prize;
+      const prizeObj = typeof prize === 'string' ? { name: prize, winner: null } : prize;
+      return { ...prizeObj, winner: winnerInfo };
+    });
+
+    // Optimistic update
+    setRaffles(prev => prev.map(r => r.id === raffleId ? { ...r, prizes: updatedPrizes } : r));
+
+    try {
+      const { error } = await supabase
+        .from('raffles')
+        .update({ prizes: updatedPrizes })
+        .eq('id', raffleId);
+        
+      if (error) throw error;
+    } catch (e) {
+      console.error("Error assigning prize winner: ", e);
+    }
+  };
+
   const deleteRaffle = async (id) => {
     if (!user) return;
+    
+    // Optimistic update
+    setRaffles(prev => prev.filter(r => r.id !== id));
+    
     try {
-      deleteDoc(doc(db, "raffles", id)).then(() => {
-        notificationService.cancelRaffleReminder(id);
-      }).catch(e => console.error("Delete bg error"));
+      const { error } = await supabase
+        .from('raffles')
+        .delete()
+        .eq('id', id);
+        
+      if (error) throw error;
+      notificationService.cancelRaffleReminder(id);
     } catch (e) {
       console.error("Error deleting raffle: ", e);
     }
@@ -166,11 +219,9 @@ export const RaffleProvider = ({ children }) => {
     const { title, prizes, ticketCount, customCount, template, image, ticketColor, drawDate, drawTime } = data;
     const finalCount = customCount ? parseInt(customCount) : parseInt(ticketCount);
 
-    // Logic to adjust tickets array size preserving existing data
-    let currentTickets = [...currentRaffle.tickets];
+    let currentTickets = [...(currentRaffle.tickets || [])];
 
     if (finalCount > currentTickets.length) {
-      // Add more
       const newTickets = Array.from({ length: finalCount - currentTickets.length }, (_, i) => ({
         number: currentTickets.length + i + 1,
         status: 'available',
@@ -178,38 +229,62 @@ export const RaffleProvider = ({ children }) => {
       }));
       currentTickets = [...currentTickets, ...newTickets];
     } else if (finalCount < currentTickets.length) {
-      // Truncate (warning: loose data if sold)
       currentTickets = currentTickets.slice(0, finalCount);
     }
 
+    const updatedPrizes = prizes.filter(p => p.trim() !== '').map((prizeStr, idx) => {
+      const existingPrize = currentRaffle.prizes && currentRaffle.prizes[idx];
+      if (existingPrize && typeof existingPrize === 'object') {
+        return { ...existingPrize, name: prizeStr };
+      }
+      return { name: prizeStr, winner: typeof existingPrize === 'string' ? null : (existingPrize?.winner || null) };
+    });
+
+    const updatedData = {
+      title,
+      draw_date: drawDate || null,
+      draw_time: drawTime || null,
+      prizes: updatedPrizes,
+      ticket_count: finalCount,
+      template,
+      ticket_color: ticketColor || currentRaffle.ticketColor || '#06b6d4',
+      image: image || currentRaffle.image,
+      tickets: currentTickets
+    };
+
+    // Optimistic update
+    const mappedRaffle = {
+      ...currentRaffle,
+      ...data,
+      drawDate,
+      drawTime,
+      ticketCount: finalCount,
+      ticketColor: updatedData.ticket_color,
+      prizes: updatedPrizes,
+      tickets: currentTickets
+    };
+    setRaffles(prev => prev.map(r => r.id === id ? mappedRaffle : r));
+
     try {
-      const raffleRef = doc(db, "raffles", id);
-      updateDoc(raffleRef, {
-        title,
-        drawDate: drawDate || null,
-        drawTime: drawTime || null,
-        prizes: prizes.filter(p => p.trim() !== ''),
-        ticketCount: finalCount,
-        template,
-        ticketColor: ticketColor || currentRaffle.ticketColor || '#06b6d4',
-        image: image || currentRaffle.image,
-        tickets: currentTickets
-      }).then(() => {
-        // Reschedule notification
-        const updatedRaffle = { ...currentRaffle, ...data, tickets: currentTickets };
-        if (updatedRaffle.drawDate) {
-          notificationService.scheduleRaffleReminder(updatedRaffle);
-        } else {
-          notificationService.cancelRaffleReminder(id);
-        }
-      }).catch(e => console.log("Update bg error", e));
+      const { error } = await supabase
+        .from('raffles')
+        .update(updatedData)
+        .eq('id', id);
+        
+      if (error) throw error;
+
+      if (mappedRaffle.drawDate) {
+        notificationService.scheduleRaffleReminder(mappedRaffle);
+      } else {
+        notificationService.cancelRaffleReminder(id);
+      }
     } catch (e) {
       console.error("Error updating raffle: ", e);
     }
   };
 
   return (
-    <RaffleContext.Provider value={{ raffles, loading, error, isSynced, addRaffle, getRaffle, updateTicket, deleteRaffle, updateRaffle }}>
+    <RaffleContext.Provider value={{ raffles, loading, error, isSynced, addRaffle, getRaffle, updateTicket, deleteRaffle, updateRaffle, assignPrizeWinner }}>
       {children}
     </RaffleContext.Provider>
   );

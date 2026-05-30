@@ -42,6 +42,38 @@ const BackButtonHandler = ({ children }) => {
   return children;
 };
 
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null, errorInfo: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error("ErrorBoundary caught an error", error, errorInfo);
+    this.setState({ error, errorInfo });
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ color: 'white', padding: '20px', fontFamily: 'monospace', wordBreak: 'break-all' }}>
+          <h2>Algo salió mal.</h2>
+          <details style={{ whiteSpace: 'pre-wrap' }}>
+            {this.state.error && this.state.error.toString()}
+            <br />
+            {this.state.errorInfo && this.state.errorInfo.componentStack}
+          </details>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 function App() {
   useEffect(() => {
     // Initialize Native UI
@@ -63,7 +95,8 @@ function App() {
   }, []);
 
   return (
-    <AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
       <RaffleProvider>
         <Router>
           <BackButtonHandler>
@@ -94,11 +127,13 @@ function App() {
                   <RaffleDetails />
                 </PrivateRoute>
               } />
+              <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </BackButtonHandler>
         </Router>
       </RaffleProvider>
     </AuthProvider>
+    </ErrorBoundary>
   );
 }
 
